@@ -96,6 +96,15 @@ class SkillLoop:
         "most", "less", "least", "very", "much", "many", "few", "now", "yet", "so", "up", "down", "over",
         "under", "again", "once", "first", "last", "next", "prev", "previous", "current", "actually", "really",
         "script", "scripts", "program", "programs", "python", "bash", "shell", "sh",
+        # Function words and generic instruction verbs. These matter most for FACET text: applies_when
+        # phrases are tokenised word-by-word and every token becomes an ANCHOR at weight 3.0, so a
+        # multi-word phrase donates its prepositions as anchors. Anchors are what prevent false fires, so a
+        # function word satisfying the anchor rule defeats the mechanism. Measured (qa/run_r1.py): the
+        # phrase "script lies about success" made "about" an anchor and "write a haiku about the sea"
+        # retrieved an exit-code skill; "explain analyze" made "explain" an anchor and "explain the plot of
+        # Hamlet" retrieved a Postgres skill.
+        "about", "between", "against", "during", "without", "within", "across", "among", "upon", "toward",
+        "explain", "describe", "difference", "differences", "instead", "rather", "whether", "regardless",
     }
 
     @classmethod

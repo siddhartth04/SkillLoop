@@ -107,3 +107,39 @@ def test_size_cap_blocks_trace_flooding():
     steps = [Step("tool", "A" * 50000) for _ in range(200)]
     out, stats = sanitize_trace(Trace(task="x", steps=steps))
     assert len(out.to_json()) <= Caps.max_total_chars
+
+
+def test_function_words_do_not_act_as_retrieval_anchors(tmp_path):
+    """A preposition must not satisfy the anchor rule.
+
+    applies_when phrases are tokenised word-by-word and every token becomes an anchor at weight 3.0. The
+    anchor rule is what stops a skill firing on incidental vocabulary, so if a function word can satisfy it
+    the guard is porous for any skill whose facets contain ordinary English. Measured before the fix:
+    "write a haiku about the sea" retrieved an exit-code skill on the single word "about".
+    """
+    from skillloop import SkillLoop
+    from skillloop.llm import LLM
+    from skillloop.store import Skill
+    from skillloop.playbook import new_bullet
+
+    lp = SkillLoop(home=str(tmp_path), llm=LLM(provider="fake"))
+    lp.store.save_skill(Skill(
+        name="bash-exit-code-hides-failure",
+        description="Verify a script had its intended effect when it exits 0 regardless of what happened.",
+        body="", status="active", security={"cleared": True},
+        bullets=[new_bullet("procedure", "Check the side effect, not $?."),
+                 new_bullet("verification", "test -f the artifact and compare mtime.")],
+        facets={"applies_when": ["exit 0 but nothing happened", "script lies about success"],
+                "symptoms": [], "not_for": []},
+        queries=["the script says it worked but nothing changed"]),
+        triggers=["the script says it worked but nothing changed"], snapshot=False)
+
+    for unrelated in ("write a haiku about the sea",
+                      "tell me about the weather in Jakarta",
+                      "a documentary about deep sea fish"):
+        hits = [h["name"] for h in lp.recall(unrelated, limit=3) if h["name"] != "_principles"]
+        assert hits == [], f"{unrelated!r} fired {hits} - a function word satisfied the anchor rule"
+
+    assert [h["name"] for h in lp.recall("my script exits 0 but produced nothing", limit=3)
+            if h["name"] != "_principles"] == ["bash-exit-code-hides-failure"], \
+        "the stoplist must not break legitimate retrieval"
