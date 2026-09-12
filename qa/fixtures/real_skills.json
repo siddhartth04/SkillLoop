@@ -1,0 +1,49 @@
+[
+  {
+    "name": "unicode-case-conversion",
+    "description": "Convert text case correctly when the input may contain non-ASCII characters.",
+    "facets": {
+      "applies_when": ["uppercase a file", "lowercase a file", "change text case", "case conversion"],
+      "symptoms": ["accented characters unchanged", "tr leaves non-ascii untouched"],
+      "not_for": ["binary files", "case-insensitive search"]
+    },
+    "queries": [
+      "make this file uppercase",
+      "convert the text to lowercase",
+      "write the uppercase version of a file",
+      "change the case of the text in a file"
+    ],
+    "bullets": [
+      ["preconditions", "The input may contain non-ASCII characters. Check first: `python3 -c \"print(any(ord(c)>127 for c in open('IN').read()))\"`."],
+      ["procedure", "Do NOT use `tr '[:lower:]' '[:upper:]'` - it is byte-oriented and silently leaves accented characters unchanged."],
+      ["procedure", "Use Python's str.upper()/str.lower(), which are Unicode-aware: `python3 -c \"open('OUT','w').write(open('IN').read().upper())\"`."],
+      ["verification", "Read the output back and assert the property holds: `python3 -c \"t=open('OUT').read(); assert t==t.upper()\"`."],
+      ["failure_modes", "Writing the output without reading it back hides the failure entirely - the command exits 0 either way."],
+      ["scope_limits", "Text files only. Locale-specific casing (Turkish dotless i) needs an explicit locale."]
+    ]
+  },
+  {
+    "name": "structured-config-edit",
+    "description": "Edit one value in a structured config file (YAML/JSON/TOML) without touching siblings.",
+    "facets": {
+      "applies_when": ["edit yaml", "change a config value", "update settings file", "set a key in json"],
+      "symptoms": ["sed changed more than one key", "sibling value also modified", "file no longer parses"],
+      "not_for": ["free-form text files", "creating a config from scratch"]
+    },
+    "queries": [
+      "set replicas to 4 in the yaml",
+      "change the timeout under the server section",
+      "update a value in the config file",
+      "edit one key in settings.yaml"
+    ],
+    "bullets": [
+      ["preconditions", "Identify the FULL path of the target key (e.g. service.replicas), not just its leaf name."],
+      ["procedure", "Do NOT use `sed -i 's/key: old/key: new/g'` - the same leaf name usually appears under several parents and `g` hits all of them."],
+      ["procedure", "Parse, mutate the addressed node, and re-serialise: `python3 -c \"import yaml;d=yaml.safe_load(open('F'));d['service']['replicas']=4;yaml.safe_dump(d,open('F','w'))\"`."],
+      ["verification", "Assert the target changed AND a sibling with the same leaf name did NOT: `assert d['service']['replicas']==4 and d['limits']['replicas']==OLD`."],
+      ["verification", "Re-parse the file afterwards to prove it is still valid: `python3 -c \"import yaml;yaml.safe_load(open('F'))\"`."],
+      ["failure_modes", "A regex edit that matches nothing also exits 0 - absence of error is not evidence of change."],
+      ["scope_limits", "Round-tripping through a parser drops comments and reorders keys; use a format-preserving editor when comments matter."]
+    ]
+  }
+]
