@@ -472,3 +472,26 @@ suspicious result is an instrument smell until traces are read.
 
 STATUS: harness validated on gpt-oss-20b. Ready to run the fresh Groq screen (the 162 gpt-4o-mini runs are not
 reused — mixing agents across arms is a confound). E5-HE remains UNMEASURED until screen->learn->ab complete.
+
+## 2026-09-12 — two user-reported bugs fixed (verified_by inversion, quarantine strand)
+
+### Bug 1 (insidious): `verified_by()` flipped booleans
+`verified_by(exit_code)` tested `exit_code == 0`. Because `False == 0` in Python, passing a bool inverted the
+result: `s.verified_by(actual == expected)` recorded SUCCESS when the check FAILED and vice versa. Since the
+library learns from verified failures, this taught it from tasks that actually succeeded and hid the ones that
+failed - corrupting the training signal silently. Fix: `isinstance(check, bool)` is handled directly
+(True=pass, False=fail); ints keep the exit-code convention (0=pass). Reproduced, fixed, regression test.
+
+### Bug 2 (severe on the manual provider): skills stranded in quarantine forever
+The pipeline saved the skill (claiming `lesson.id` in `lesson_ids`) BEFORE running the gate. If anything
+interrupted between those steps - crash, rate limit, or a `PendingManualCall` (which happens on EVERY manual
+run by design) - the skill was left in quarantine with its lesson already claimed. On the next run the
+idempotence guard fired ("lesson already contributed"), returned early, never ran the gate, never wrote an
+eval, and marked the trace processed=1 so it was never retried. Observed: status=quarantine, evals=[],
+recall()->nothing, no error anywhere. On the manual provider (the "no API key" path the README advertises) no
+skill could EVER reach active. Fix: the idempotence guard only skips skills that actually cleared the gate
+(candidate/active); a lesson whose skill is stuck in quarantine RESUMES into the gate via a new `_gate()`
+entry point. Reproduced end-to-end on the manual provider, fixed, regression test (skill reaches candidate and
+is recallable).
+
+67 tests.

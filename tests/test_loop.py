@@ -858,3 +858,58 @@ def test_store_is_a_context_manager():
         assert getattr(st._local, "conn", None) is not None
     assert getattr(st._local, "conn", None) is None
     shutil.rmtree(home)
+
+
+def test_verified_by_does_not_flip_booleans(loop):
+    """Reviewer bug 1: `False == 0` in Python, so a naive exit-code check inverts a boolean result -
+    recording success for a failed check and vice versa, corrupting what the library learns from."""
+    with loop.session("t") as s:
+        s.verified_by(True)          # user means: PASSED
+    assert loop.store.get_trace(s.trace.id).outcome == "success"
+    with loop.session("t") as s:
+        s.verified_by(False)         # user means: FAILED
+    assert loop.store.get_trace(s.trace.id).outcome == "failure"
+    # exit-code convention still works
+    with loop.session("t") as s:
+        s.verified_by(0)
+    assert loop.store.get_trace(s.trace.id).outcome == "success"
+    with loop.session("t") as s:
+        s.verified_by(2)
+    assert loop.store.get_trace(s.trace.id).outcome == "failure"
+
+
+def test_quarantined_skill_resumes_into_gate(monkeypatch, tmp_path):
+    """Reviewer bug 2: if the pipeline is interrupted between saving a skill and gating it (crash, rate limit,
+    or a PendingManualCall on the manual provider), the lesson is already claimed. The next run must RESUME
+    that quarantined skill into the gate, not skip it forever - otherwise the skill is lost with no error and
+    can never be recalled."""
+    import json
+    home = tempfile.mkdtemp()
+    mdir = tmp_path / "m"
+    old = os.environ.get("SKILLLOOP_MANUAL_DIR")
+    os.environ["SKILLLOOP_MANUAL_DIR"] = str(mdir)
+    try:
+        lp = SkillLoop(home=home, llm=LLM(provider="manual"), policy=Policy())
+        lp.learn(failing_trace())
+        reached_gate = False
+        for _ in range(20):
+            rep = lp.process()
+            r = rep[0] if rep else {}
+            if r.get("awaiting_manual"):
+                req = json.loads(Path(r["path"]).read_text())
+                Path(r["path"].replace(".request.", ".answer.")).write_text(fake_handler(req["system"], req["user"]))
+            elif r.get("judge_eval"):
+                reached_gate = True
+                break
+            elif r.get("skipped"):
+                assert False, f"skill was skipped instead of resumed: {r['skipped']}"
+        assert reached_gate, "pipeline never reached the gate"
+        sk = lp.store.get_skill("verify-pip-install")
+        assert sk.status == "candidate", sk.status
+        assert lp.recall("pip install a package"), "resumed skill must be recallable"
+    finally:
+        if old is None:
+            os.environ.pop("SKILLLOOP_MANUAL_DIR", None)
+        else:
+            os.environ["SKILLLOOP_MANUAL_DIR"] = old
+        shutil.rmtree(home)

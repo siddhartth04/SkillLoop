@@ -399,10 +399,19 @@ class SkillLoop:
         if existing is None:
             existing = self._find_duplicate(lesson)
 
-        # idempotence: a lesson that already contributed to this skill must not be applied again
-        if existing and lesson.id in existing.lesson_ids:
+        # idempotence: a lesson that already contributed to a skill must not be applied twice - BUT only skip
+        # when that skill actually cleared the gate. A skill stranded in quarantine (a crash, a rate limit, or
+        # a PendingManualCall between save and gate) must be RESUMED into the gate, not skipped forever, or the
+        # learned skill is lost with no error and can never be recalled (quarantine is not a live status).
+        if existing and lesson.id in existing.lesson_ids and existing.status in ("candidate", "active"):
             r["skipped"] = f"lesson {lesson.id} already contributed to {existing.name} (v{existing.version})"
             return r
+
+        # RESUME: this lesson already built a skill, but it stalled in quarantine before the gate (crash / rate
+        # limit / manual-provider pause). Re-run the gate on the existing skill instead of rebuilding it.
+        if existing and lesson.id in existing.lesson_ids and existing.status == "quarantine":
+            r["resumed"] = f"{existing.name} v{existing.version} was stranded in quarantine; re-running the gate"
+            return self._gate(existing, lesson, t, r)
 
         related = find_related(self.store, lesson)
         if existing:
@@ -415,7 +424,14 @@ class SkillLoop:
             return r
 
         skill, change = synthesize(self.llm, self.store, lesson, related, existing)
-        # security: regex + injection judge. Findings keep the skill in quarantine.
+        r["_change"] = change
+        return self._gate(skill, lesson, t, r)
+
+    def _gate(self, skill, lesson, t, r):
+        """Shape -> security -> judge. Saving the skill (which claims the lesson id) happens INSIDE here,
+        right before each gate step, and the caller resumes here if a step was interrupted. A skill only
+        leaves quarantine when the judge actually passes."""
+        change = r.pop("_change", "resumed")
         shape_problems = gate.shape_ok(skill)
         if shape_problems:
             r["rejected"] = f"skill shape incomplete: {shape_problems}"
@@ -425,6 +441,8 @@ class SkillLoop:
         skill.security = gate.security_check(self.llm, skill)   # cheap path when no risk markers
         if emb := self._maybe_embed(skill):
             skill.embedding = emb
+        # NOTE: this save claims lesson.id in lesson_ids. If make_and_judge below is interrupted (crash / rate
+        # limit / PendingManualCall), the skill stays in quarantine and the RESUME path re-enters _gate here.
         self.store.save_skill(skill, triggers=lesson.triggers)
         self.store.log("synthesize", skill.name, f"v{skill.version}: {change}")
         r["skill"] = {"name": skill.name, "version": skill.version, "change": change,
@@ -435,8 +453,7 @@ class SkillLoop:
             r["rejected"] = "security check failed; skill stays in quarantine"
             r["security"] = skill.security
             return r
-
-        # gate: assertions + verdict in a single model call
+        # gate: assertions + verdict in a single model call (may raise PendingManualCall -> resumed later)
         ev, passed = gate.make_and_judge(self.llm, self.store, skill, t)
         r["judge_eval"] = {"id": ev.id, "passed": passed, "assertions": ev.assertions,
                            "reason": ev.result.get("reason", "")}
@@ -444,8 +461,6 @@ class SkillLoop:
             skill.status = "candidate"
             self.store.save_skill(skill, triggers=lesson.triggers, snapshot=False)
             self.store.log("promote", skill.name, "candidate (judge eval passed)")
-            # queue a host-run eval so real usage can promote it to active. Reuses the assertions the gate
-            # already produced instead of paying for a second set.
             hev = gate.queue_host_eval(self.store, skill, t, ev.assertions)
             r["host_eval_queued"] = hev.id
         else:

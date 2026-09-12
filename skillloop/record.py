@@ -101,9 +101,21 @@ class Session:
         self._outcome, self._detail, self._confidence = "partial", detail, confidence
         return self
 
-    def verified_by(self, exit_code: int, detail: str = "") -> "Session":
-        """Outcome from an independent check - far stronger evidence than the agent's own opinion."""
-        return self.ok(detail or "checker passed") if exit_code == 0 else self.fail(detail or "checker failed")
+    def verified_by(self, check, detail: str = "") -> "Session":
+        """Outcome from an independent check - far stronger evidence than the agent's own opinion.
+
+        Accepts BOTH conventions and does not confuse them:
+          - a bool: True = passed, False = failed        (e.g. s.verified_by(actual == expected))
+          - an int exit code: 0 = passed, nonzero = failed (e.g. s.verified_by(proc.returncode))
+        This distinction matters because in Python `False == 0`, so a naive `== 0` test would record the
+        exact OPPOSITE for a boolean, teaching the library from tasks that actually succeeded and hiding the
+        ones that failed.
+        """
+        if isinstance(check, bool):
+            passed = check
+        else:
+            passed = (check == 0)
+        return self.ok(detail or "checker passed") if passed else self.fail(detail or "checker failed")
 
     # ---------------- lifecycle ----------------
     def build(self) -> Trace:
