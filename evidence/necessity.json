@@ -1,0 +1,58 @@
+{
+ "screen": {
+  "n1_maxnum": [
+   false,
+   false,
+   false
+  ],
+  "n2_minnum": [
+   true,
+   true,
+   false
+  ],
+  "n3_count": [
+   true,
+   true,
+   true
+  ],
+  "n4_count2": [
+   true,
+   true,
+   true
+  ],
+  "n5_replace": [
+   false,
+   true,
+   true
+  ],
+  "n6_replace2": [
+   true,
+   true,
+   true
+  ],
+  "n7_upper": [
+   false,
+   false,
+   false
+  ],
+  "n8_lower": [
+   true,
+   false,
+   false
+  ],
+  "n9_yaml": [
+   false,
+   false,
+   false
+  ],
+  "n10_silent": [
+   false,
+   true,
+   false
+  ]
+ },
+ "control": {},
+ "treat": {},
+ "recall": {},
+ "agent_model": "groq/compound-mini"
+}

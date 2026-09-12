@@ -1,0 +1,22 @@
+
+# generated / local
+*.db
+*.db-shm
+*.db-wal
+*.egg-info/
+.pytest_cache/
+.skillloop/
+.v/
+.venv/
+__pycache__/
+backups/
+build/
+calibration*.json
+dist/
+qa/*scratch*/
+qa/he/
+qa/he_groq*/
+qa/he_scratch/
+qa/lib*/
+qa/scratch/
+qa/state*.json

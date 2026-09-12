@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "python3 /path/to/skillloop/adapters/claude_code/skillloop_hook.py prompt" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "python3 /path/to/skillloop/adapters/claude_code/skillloop_hook.py stop" } ] }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skillloop"
+version = "0.3.0"
+description = "Test-gated skill learning for any AI agent. recall() before, learn() after; skills earn their way in."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = []          # core is stdlib-only; add a provider below
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.40"]     # also covers Groq/OpenRouter/Ollama/vLLM via OPENAI_BASE_URL
+mcp = ["mcp>=1.0"]
+all = ["anthropic>=0.40", "openai>=1.40", "mcp>=1.0"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+skillloop = "skillloop.cli:main"
+
+[project.urls]
+Source = "https://github.com/YOURORG/skillloop"
+
+[tool.setuptools.packages.find]
+include = ["skillloop*"]
+exclude = ["qa*", "tests*", "build*"]
