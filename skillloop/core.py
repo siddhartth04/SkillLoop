@@ -409,7 +409,17 @@ class SkillLoop:
 
         # RESUME: this lesson already built a skill, but it stalled in quarantine before the gate (crash / rate
         # limit / manual-provider pause). Re-run the gate on the existing skill instead of rebuilding it.
-        if existing and lesson.id in existing.lesson_ids and existing.status == "quarantine":
+        #
+        # "quarantine" has TWO causes and only one of them should resume. A skill demoted by apply_use() for
+        # a collapsed hit rate is also in quarantine with its lesson still claimed, and re-gating it would
+        # send it back to candidate - the judge only reads the skill text, which has not changed, so it
+        # passes again and the record of five real-world failures is erased. Demotion is what retires bad
+        # skills, so undoing it silently would defeat the lifecycle policy.
+        #
+        # The two cases are distinguishable in the store: a skill stranded BEFORE the gate has no eval,
+        # while a demoted one has a passed judge eval from when it was promoted.
+        if (existing and lesson.id in existing.lesson_ids and existing.status == "quarantine"
+                and not self.store.evals_for(existing.name)):
             r["resumed"] = f"{existing.name} v{existing.version} was stranded in quarantine; re-running the gate"
             return self._gate(existing, lesson, t, r)
 

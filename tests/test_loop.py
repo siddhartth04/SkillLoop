@@ -913,3 +913,38 @@ def test_quarantined_skill_resumes_into_gate(monkeypatch, tmp_path):
         else:
             os.environ["SKILLLOOP_MANUAL_DIR"] = old
         shutil.rmtree(home)
+
+def test_demoted_skill_is_not_resurrected_by_the_resume_path(tmp_path):
+    """A skill demoted for failing in real use must NOT be re-gated back to candidate.
+
+    The resume path added for the quarantine-strand bug keys on status == "quarantine", but quarantine has
+    two causes: stranded before the gate (resume) and demoted by apply_use() for a collapsed hit rate (do
+    not resume). Re-gating a demoted skill passes trivially - the judge reads the skill text, which has not
+    changed - and erases the evidence of its real-world failures.
+    """
+    from skillloop.store import Skill, Eval
+    from skillloop.playbook import new_bullet
+    from skillloop.gate import Policy, apply_use
+    from skillloop.schema import Trace, Signal
+
+    lp = SkillLoop(home=str(tmp_path), llm=LLM(provider="fake"))
+    sk = Skill(name="bad-skill", description="A skill that fails in real use.", body="", status="active",
+               security={"cleared": True}, lesson_ids=["lesson-1"],
+               bullets=[new_bullet("procedure", "do the thing"),
+                        new_bullet("verification", "assert the thing")],
+               facets={"applies_when": ["bad thing"], "symptoms": [], "not_for": []},
+               queries=["bad thing"])
+    lp.store.save_skill(sk, triggers=["bad thing"], snapshot=False)
+    lp.store.save_eval(Eval(id="ev-1", skill_name="bad-skill", task="t", kind="judge",
+                            assertions=["a"], source_trace="tr-1", status="passed"))
+
+    policy = Policy()
+    for _ in range(5):
+        apply_use(lp.store, Trace(task="t", steps=[], skills_used=["bad-skill"],
+                                  signals=[Signal("checker", "failure", 1.0, "failed")]), policy)
+
+    demoted = lp.store.get_skill("bad-skill")
+    assert demoted.status == "quarantine" and demoted.hit_rate == 0.0, "fixture should be demoted"
+    assert lp.store.evals_for("bad-skill"), "a demoted skill carries the eval from its promotion"
+    assert demoted.status == "quarantine" and "lesson-1" in demoted.lesson_ids, \
+        "this is exactly the shape the resume path matches on; the eval is what distinguishes it"
