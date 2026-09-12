@@ -153,9 +153,26 @@ class Store:
         # shared mutable state, which surfaces as OperationalError / InterfaceError / SystemError under load.
         self._db_path = str(self.home / "skillloop.db")
         self._local = threading.local()
+        # Bumped by this Store's own skill writes; see library_version.
+        self._library_version = 0
         self._init()
         from .migrate import migrate
         migrate(self.db)
+
+    @property
+    def library_version(self) -> tuple[int, int]:
+        """Cache key for anything derived from the whole skill library.
+
+        Two components, because one is not enough:
+          - a local counter, bumped by this Store's own writes;
+          - PRAGMA data_version, which SQLite increments when ANOTHER connection commits. Without it a cache
+            in the HTTP server would keep serving profiles from before a `skillloop` CLI write to the same DB.
+        """
+        try:
+            dv = self.db.execute("PRAGMA data_version").fetchone()[0]
+        except sqlite3.OperationalError:
+            dv = 0
+        return (self._library_version, int(dv))
 
     @property
     def db(self) -> sqlite3.Connection:
@@ -248,6 +265,7 @@ class Store:
 
     def save_skill(self, s: Skill, triggers: list[str] | None = None, snapshot: bool = True) -> None:
         s.updated = time.time()
+        self._library_version += 1
         if triggers is None:
             # keep the existing trigger column
             r = self.db.execute("SELECT triggers FROM skill_fts WHERE name=?", (s.name,)).fetchone()
@@ -268,6 +286,12 @@ class Store:
     def triggers_for(self, name: str) -> str:
         r = self.db.execute("SELECT triggers FROM skill_fts WHERE name=?", (name,)).fetchone()
         return r["triggers"] if r else ""
+
+    def all_triggers(self) -> dict[str, str]:
+        """Every skill's triggers in ONE query. Retrieval builds a profile per skill on every recall(), and
+        doing that with a per-skill SELECT costs O(library) round-trips per query."""
+        return {r["name"]: r["triggers"] for r in
+                self.db.execute("SELECT name, triggers FROM skill_fts").fetchall()}
 
     def bump_recalls(self, names: list[str]) -> None:
         for n in names:

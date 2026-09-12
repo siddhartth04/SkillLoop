@@ -116,7 +116,17 @@ class SkillLoop:
 
     def _profiles(self, statuses: tuple[str, ...]) -> list[tuple[Skill, dict[str, float], set[str]]]:
         """What each skill is FOR - name, description, triggers, facets. Deliberately NOT the body: matching
-        on body text is what made a JSON skill fire on a CSV task (both mention 'file' and 'python')."""
+        on body text is what made a JSON skill fire on a CSV task (both mention 'file' and 'python').
+
+        Cached against Store.library_version: profiles depend only on the library, not the query, so an
+        unchanged library is not re-read and re-tokenised on every call. Rebuilding this per query was 81% of
+        recall() time at a 500-skill library (one SELECT per skill, plus tokenisation of every facet).
+        """
+        key = (tuple(sorted(statuses)), self.store.library_version)
+        cached = getattr(self, "_profiles_cache", None)
+        if cached is not None and cached[0] == key:
+            return cached[1]
+        trig = self.store.all_triggers()          # one query, not one per skill
         out = []
         for sk in self.store.all_skills():
             if sk.status not in statuses:
@@ -127,7 +137,7 @@ class SkillLoop:
             fields = [
                 (sk.name.replace("-", " "), 3.0),
                 (" ".join(fac.get("applies_when", [])), 3.0),
-                (self.store.triggers_for(sk.name), 2.0),
+                (trig.get(sk.name, ""), 2.0),
                 (" ".join(fac.get("symptoms", [])), 2.0),
                 (sk.description, 1.0),
             ]
@@ -137,6 +147,8 @@ class SkillLoop:
                     if w >= 3.0:
                         anchors.add(t)
             out.append((sk, weighted, anchors))
+        self._profiles_cache = (key, out)
+        self._idf_cache = None
         return out
 
     # Function words only. The facet stoplist strips domain vocabulary (script, run, output) because in a
@@ -179,13 +191,19 @@ class SkillLoop:
         return best
 
     def _idf(self, profiles) -> dict[str, float]:
+        """IDF over the profile corpus. Cached alongside _profiles: it is a pure function of the library."""
+        cached = getattr(self, "_idf_cache", None)
+        if cached is not None and cached[0] is profiles:
+            return cached[1]
         import math
         n = len(profiles) or 1
         df: dict[str, int] = {}
         for _, prof, _a in profiles:
             for t in prof:
                 df[t] = df.get(t, 0) + 1
-        return {t: math.log(1 + n / c) for t, c in df.items()}
+        out = {t: math.log(1 + n / c) for t, c in df.items()}
+        self._idf_cache = (profiles, out)
+        return out
 
     def _search(self, task: str, statuses: tuple[str, ...], limit: int) -> list[tuple[Skill, float]]:
         """IDF-weighted coverage over each skill's purpose, with abstention.

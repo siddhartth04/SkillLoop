@@ -913,3 +913,61 @@ def test_quarantined_skill_resumes_into_gate(monkeypatch, tmp_path):
         else:
             os.environ["SKILLLOOP_MANUAL_DIR"] = old
         shutil.rmtree(home)
+
+# --------------------------------------------------------------------------- retrieval profile cache
+# The failure mode of a cache is silent staleness: retrieval keeps working, just on old data. Each of these
+# fails against an uncached-key implementation.
+
+def _cache_skill(name, applies, queries, desc):
+    from skillloop.store import Skill
+    from skillloop.playbook import new_bullet
+    return Skill(name=name, description=desc, body="", status="active",
+                 bullets=[new_bullet("procedure", f"Do the {name} thing."),
+                          new_bullet("verification", "Read the output back and assert the property holds.")],
+                 facets={"applies_when": applies, "symptoms": [], "not_for": []},
+                 queries=queries, security={"cleared": True})
+
+
+def test_profile_cache_sees_a_newly_added_skill(tmp_path):
+    lp = SkillLoop(home=str(tmp_path), llm=LLM(provider="fake"))
+    lp.store.save_skill(_cache_skill("kafka-consumer-lag", ["kafka consumer lag", "consumer group offset"],
+                                     ["consumer lag keeps growing"], "Diagnose Kafka consumer lag."),
+                        triggers=["consumer lag keeps growing"], snapshot=False)
+    assert [h["name"] for h in lp.recall("kafka consumer lag is growing", limit=2)
+            if h["name"] != "_principles"] == ["kafka-consumer-lag"]
+    lp.store.save_skill(_cache_skill("pandas-dtype-coercion", ["pandas dtype coercion", "dataframe column type"],
+                                     ["column became object dtype"], "Keep dataframe column dtypes stable."),
+                        triggers=["column became object dtype"], snapshot=False)
+    names = [h["name"] for h in lp.recall("my dataframe column dtype changed", limit=2)
+             if h["name"] != "_principles"]
+    assert "pandas-dtype-coercion" in names, "cache served profiles from before the second skill was saved"
+
+
+def test_profile_cache_reflects_a_status_change(tmp_path):
+    lp = SkillLoop(home=str(tmp_path), llm=LLM(provider="fake"))
+    sk = _cache_skill("nginx-tls-reload", ["nginx tls reload", "certificate reload"],
+                      ["nginx serves the old certificate"], "Reload nginx after a certificate change.")
+    lp.store.save_skill(sk, triggers=["nginx serves the old certificate"], snapshot=False)
+    assert any(h["name"] == "nginx-tls-reload"
+               for h in lp.recall("nginx is serving the old certificate", limit=2))
+    sk.status = "quarantine"
+    lp.store.save_skill(sk, triggers=["nginx serves the old certificate"], snapshot=False)
+    assert not any(h["name"] == "nginx-tls-reload"
+                   for h in lp.recall("nginx is serving the old certificate", limit=2)), \
+        "quarantined skill still retrievable - cache did not invalidate on status change"
+
+
+def test_profile_cache_invalidates_across_processes(tmp_path):
+    """Two Store objects on one DB (the HTTP-server-plus-CLI case): a write through B must be visible to A.
+
+    A purely in-process counter cannot see B's write, which is why the cache key also carries SQLite's
+    PRAGMA data_version.
+    """
+    a = SkillLoop(home=str(tmp_path), llm=LLM(provider="fake"))
+    b = SkillLoop(home=str(tmp_path), llm=LLM(provider="fake"))
+    a.recall("anything at all to warm the cache", limit=2)
+    b.store.save_skill(_cache_skill("celery-task-retry", ["celery task retry", "task retry backoff"],
+                                    ["task retries forever"], "Bound Celery task retries."),
+                       triggers=["task retries forever"], snapshot=False)
+    assert "celery-task-retry" in [h["name"] for h in a.recall("my celery task retries forever", limit=2)], \
+        "A served a stale cache after B wrote to the same database"

@@ -1,0 +1,54 @@
+{
+  "bench": "S1-retrieval-at-scale",
+  "probes": 7,
+  "real_skills": [
+    "unicode-case-conversion",
+    "structured-config-edit"
+  ],
+  "rows": [
+    {
+      "library": 2,
+      "distractors": 0,
+      "hit_at_1": 4,
+      "n_positive": 4,
+      "abstained": 3,
+      "n_negative": 3,
+      "false_fires": 0,
+      "wrong_skill": 0,
+      "ms_per_query": 0.349
+    },
+    {
+      "library": 102,
+      "distractors": 100,
+      "hit_at_1": 4,
+      "n_positive": 4,
+      "abstained": 3,
+      "n_negative": 3,
+      "false_fires": 0,
+      "wrong_skill": 0,
+      "ms_per_query": 3.097
+    },
+    {
+      "library": 502,
+      "distractors": 500,
+      "hit_at_1": 4,
+      "n_positive": 4,
+      "abstained": 3,
+      "n_negative": 3,
+      "false_fires": 0,
+      "wrong_skill": 0,
+      "ms_per_query": 14.038
+    },
+    {
+      "library": 2002,
+      "distractors": 2000,
+      "hit_at_1": 4,
+      "n_positive": 4,
+      "abstained": 3,
+      "n_negative": 3,
+      "false_fires": 0,
+      "wrong_skill": 0,
+      "ms_per_query": 55.152
+    }
+  ]
+}
