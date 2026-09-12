@@ -1,0 +1,2987 @@
+{
+  "0": {
+    "per_class": {
+      "A_direct": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      },
+      "B_paraphrase": {
+        "correct": 7,
+        "n": 14,
+        "rate": 0.5,
+        "ci95": [
+          0.268,
+          0.732
+        ]
+      },
+      "C_sibling": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      },
+      "D_lexical_trap": {
+        "correct": 1,
+        "n": 14,
+        "rate": 0.071,
+        "ci95": [
+          0.013,
+          0.315
+        ]
+      },
+      "E_pure_negative": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      }
+    },
+    "overall": {
+      "precision": 0.7,
+      "recall": 0.833,
+      "f1": 0.761,
+      "true_positive": 35,
+      "wrong_skill": 2,
+      "missed_abstained": 5,
+      "false_fire_on_negative": 13,
+      "median_ms": 3.47
+    },
+    "records": [
+      {
+        "class": "A_direct",
+        "query": "set the replicas under service to 4 in conf.yaml",
+        "expected": "yaml-single-key-edit",
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "merge two yaml files into one",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "pip install fails with externally managed environment",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "ModuleNotFoundError after the pip install succeeded",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch",
+          "pip-externally-managed-env"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "my interactive rebase hit a conflict",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "recover the branch I deleted by accident",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "my docker build reinstalls dependencies every time",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-layer-cache-miss",
+        "all": [
+          "docker-layer-cache-miss"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "the container exits immediately after docker run",
+        "expected": "docker-container-exits-immediately",
+        "got": "docker-container-exits-immediately",
+        "all": [
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "test passes alone but fails in the full suite",
+        "expected": "pytest-flaky-order-dependence",
+        "got": "pytest-flaky-order-dependence",
+        "all": [
+          "pytest-flaky-order-dependence"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "pytest errors during collection and no tests run",
+        "expected": "pytest-collection-error",
+        "got": "pytest-collection-error",
+        "all": [
+          "pytest-collection-error"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "explain analyze shows a sequential scan on a big table",
+        "expected": "postgres-missing-index-slow-query",
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "FATAL sorry too many clients already from postgres",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "uppercase a file that has accented characters",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "the script exits 0 but the output file is not there",
+        "expected": "bash-exit-code-hides-failure",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure",
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I need to bump one number in that settings document without disturbing anything else",
+        "expected": "yaml-single-key-edit",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I have a base config and an override and I want one document out of them",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "the package manager point blank refuses to put anything on this machine",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it said it installed fine and then python swore it had never heard of it",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I am halfway through replaying my commits and it has stopped on a clash",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "a whole day of work vanished when I reset and I need it back",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "every tiny code change makes the whole image build from scratch again",
+        "expected": "docker-layer-cache-miss",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it comes up and falls over straight away leaving nothing behind",
+        "expected": "docker-container-exits-immediately",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "everything is green one at a time and red all together",
+        "expected": "pytest-flaky-order-dependence",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "nothing at all executes, it falls over before it even starts",
+        "expected": "pytest-collection-error",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "reading one row out of that table takes several seconds",
+        "expected": "postgres-missing-index-slow-query",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "under load the app just cannot get hold of the database any more",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "turn all these names into capitals, some of them are foreign",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it always tells me it worked and I no longer believe it",
+        "expected": "bash-exit-code-hides-failure",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "C_sibling",
+        "query": "combine the base and the overlay config into a single document",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "change only the timeout key in settings.yaml, leave siblings alone",
+        "expected": "yaml-single-key-edit",
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "the install went through but the import still says no module named",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch",
+          "pytest-collection-error"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "pip will not install anything on this system at all",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "I need the commits back from a branch I removed",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "stopped mid rebase with a conflict, how do I continue",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "container starts and stops instantly with no logs",
+        "expected": "docker-container-exits-immediately",
+        "got": "docker-container-exits-immediately",
+        "all": [
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "nothing is ever cached between docker builds",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-layer-cache-miss",
+        "all": [
+          "docker-layer-cache-miss"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "pytest collects zero tests and exits",
+        "expected": "pytest-collection-error",
+        "got": "pytest-collection-error",
+        "all": [
+          "pytest-collection-error"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "the suite is flaky depending on what order things run in",
+        "expected": "pytest-flaky-order-dependence",
+        "got": "pytest-flaky-order-dependence",
+        "all": [
+          "pytest-flaky-order-dependence"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "we keep running out of database connections",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "this select is doing a seq scan and needs an index",
+        "expected": "postgres-missing-index-slow-query",
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "my build script reports success but produced no artifact",
+        "expected": "bash-exit-code-hides-failure",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "lowercase this text file including the accented letters",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a brand new yaml config file from scratch for a service with replicas",
+        "expected": null,
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit",
+          "yaml-merge-two-files"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "explain what yaml anchors and aliases are",
+        "expected": null,
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files",
+          "yaml-single-key-edit"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what does pip download actually do",
+        "expected": null,
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a python module and give it a good import name",
+        "expected": null,
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "explain the difference between git rebase and git merge conceptually",
+        "expected": null,
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how do I create a new branch in git",
+        "expected": null,
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a Dockerfile for a node application",
+        "expected": null,
+        "got": "docker-layer-cache-miss",
+        "all": [
+          "docker-layer-cache-miss"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what is the difference between a container and an image",
+        "expected": null,
+        "got": "docker-container-exits-immediately",
+        "all": [
+          "docker-container-exits-immediately"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a pytest fixture that returns a database session",
+        "expected": null,
+        "got": "pytest-collection-error",
+        "all": [
+          "pytest-collection-error",
+          "pytest-flaky-order-dependence"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how do I measure test coverage in this project",
+        "expected": null,
+        "got": "pytest-flaky-order-dependence",
+        "all": [
+          "pytest-flaky-order-dependence"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "design a postgres schema for an orders table with an index on customer id",
+        "expected": null,
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how many connections does postgres support by default",
+        "expected": null,
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "convert this file from latin-1 encoding to utf-8",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what does the exit code of grep mean when there are no matches",
+        "expected": null,
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the capital of Australia",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "write a haiku about the sea",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "summarise this quarterly earnings report",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what time zone is Jakarta in",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "recommend a good book on macroeconomics",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "translate good morning into Portuguese",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "how do I change a flat tyre",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the offside rule in football",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "plan a three day trip to Kyoto",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "draft a polite email declining a meeting",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the boiling point of ethanol",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "explain the plot of Hamlet in two sentences",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "how long should I bake a sourdough loaf",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what are the main causes of inflation",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      }
+    ],
+    "library": 14
+  },
+  "100": {
+    "per_class": {
+      "A_direct": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      },
+      "B_paraphrase": {
+        "correct": 7,
+        "n": 14,
+        "rate": 0.5,
+        "ci95": [
+          0.268,
+          0.732
+        ]
+      },
+      "C_sibling": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      },
+      "D_lexical_trap": {
+        "correct": 1,
+        "n": 14,
+        "rate": 0.071,
+        "ci95": [
+          0.013,
+          0.315
+        ]
+      },
+      "E_pure_negative": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      }
+    },
+    "overall": {
+      "precision": 0.686,
+      "recall": 0.833,
+      "f1": 0.753,
+      "true_positive": 35,
+      "wrong_skill": 3,
+      "missed_abstained": 4,
+      "false_fire_on_negative": 13,
+      "median_ms": 14.33
+    },
+    "records": [
+      {
+        "class": "A_direct",
+        "query": "set the replicas under service to 4 in conf.yaml",
+        "expected": "yaml-single-key-edit",
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "merge two yaml files into one",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files",
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "pip install fails with externally managed environment",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch",
+          "npm-2"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "ModuleNotFoundError after the pip install succeeded",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch",
+          "pip-externally-managed-env"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "my interactive rebase hit a conflict",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "recover the branch I deleted by accident",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "my docker build reinstalls dependencies every time",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-layer-cache-miss",
+        "all": [
+          "docker-layer-cache-miss"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "the container exits immediately after docker run",
+        "expected": "docker-container-exits-immediately",
+        "got": "docker-container-exits-immediately",
+        "all": [
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "test passes alone but fails in the full suite",
+        "expected": "pytest-flaky-order-dependence",
+        "got": "pytest-flaky-order-dependence",
+        "all": [
+          "pytest-flaky-order-dependence"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "pytest errors during collection and no tests run",
+        "expected": "pytest-collection-error",
+        "got": "pytest-collection-error",
+        "all": [
+          "pytest-collection-error",
+          "pytest-6",
+          "pytest-16"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "explain analyze shows a sequential scan on a big table",
+        "expected": "postgres-missing-index-slow-query",
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "FATAL sorry too many clients already from postgres",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "uppercase a file that has accented characters",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "the script exits 0 but the output file is not there",
+        "expected": "bash-exit-code-hides-failure",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure",
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I need to bump one number in that settings document without disturbing anything else",
+        "expected": "yaml-single-key-edit",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I have a base config and an override and I want one document out of them",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "the package manager point blank refuses to put anything on this machine",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it said it installed fine and then python swore it had never heard of it",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I am halfway through replaying my commits and it has stopped on a clash",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "a whole day of work vanished when I reset and I need it back",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "every tiny code change makes the whole image build from scratch again",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-0",
+        "all": [
+          "docker-0",
+          "docker-10",
+          "docker-20"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it comes up and falls over straight away leaving nothing behind",
+        "expected": "docker-container-exits-immediately",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "everything is green one at a time and red all together",
+        "expected": "pytest-flaky-order-dependence",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "nothing at all executes, it falls over before it even starts",
+        "expected": "pytest-collection-error",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "reading one row out of that table takes several seconds",
+        "expected": "postgres-missing-index-slow-query",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "under load the app just cannot get hold of the database any more",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "turn all these names into capitals, some of them are foreign",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it always tells me it worked and I no longer believe it",
+        "expected": "bash-exit-code-hides-failure",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "C_sibling",
+        "query": "combine the base and the overlay config into a single document",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "change only the timeout key in settings.yaml, leave siblings alone",
+        "expected": "yaml-single-key-edit",
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "the install went through but the import still says no module named",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch",
+          "pytest-collection-error"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "pip will not install anything on this system at all",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "I need the commits back from a branch I removed",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "stopped mid rebase with a conflict, how do I continue",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "container starts and stops instantly with no logs",
+        "expected": "docker-container-exits-immediately",
+        "got": "docker-container-exits-immediately",
+        "all": [
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "nothing is ever cached between docker builds",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-layer-cache-miss",
+        "all": [
+          "docker-layer-cache-miss"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "pytest collects zero tests and exits",
+        "expected": "pytest-collection-error",
+        "got": "pytest-collection-error",
+        "all": [
+          "pytest-collection-error"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "the suite is flaky depending on what order things run in",
+        "expected": "pytest-flaky-order-dependence",
+        "got": "pytest-flaky-order-dependence",
+        "all": [
+          "pytest-flaky-order-dependence"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "we keep running out of database connections",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "this select is doing a seq scan and needs an index",
+        "expected": "postgres-missing-index-slow-query",
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "my build script reports success but produced no artifact",
+        "expected": "bash-exit-code-hides-failure",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "lowercase this text file including the accented letters",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a brand new yaml config file from scratch for a service with replicas",
+        "expected": null,
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit",
+          "yaml-merge-two-files"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "explain what yaml anchors and aliases are",
+        "expected": null,
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files",
+          "yaml-single-key-edit"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what does pip download actually do",
+        "expected": null,
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a python module and give it a good import name",
+        "expected": null,
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "explain the difference between git rebase and git merge conceptually",
+        "expected": null,
+        "got": "git-1",
+        "all": [
+          "git-1",
+          "git-11",
+          "git-21"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how do I create a new branch in git",
+        "expected": null,
+        "got": "git-1",
+        "all": [
+          "git-1",
+          "git-11",
+          "git-21"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a Dockerfile for a node application",
+        "expected": null,
+        "got": "docker-0",
+        "all": [
+          "docker-0",
+          "docker-10",
+          "docker-20"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what is the difference between a container and an image",
+        "expected": null,
+        "got": "docker-0",
+        "all": [
+          "docker-0",
+          "docker-10",
+          "docker-20"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a pytest fixture that returns a database session",
+        "expected": null,
+        "got": "pytest-6",
+        "all": [
+          "pytest-6",
+          "pytest-16",
+          "pytest-26"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how do I measure test coverage in this project",
+        "expected": null,
+        "got": "pytest-6",
+        "all": [
+          "pytest-6",
+          "pytest-16",
+          "pytest-26"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "design a postgres schema for an orders table with an index on customer id",
+        "expected": null,
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query",
+          "postgres-3",
+          "postgres-13"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how many connections does postgres support by default",
+        "expected": null,
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "convert this file from latin-1 encoding to utf-8",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what does the exit code of grep mean when there are no matches",
+        "expected": null,
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the capital of Australia",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "write a haiku about the sea",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "summarise this quarterly earnings report",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what time zone is Jakarta in",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "recommend a good book on macroeconomics",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "translate good morning into Portuguese",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "how do I change a flat tyre",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the offside rule in football",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "plan a three day trip to Kyoto",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "draft a polite email declining a meeting",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the boiling point of ethanol",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "explain the plot of Hamlet in two sentences",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "how long should I bake a sourdough loaf",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what are the main causes of inflation",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      }
+    ],
+    "library": 114
+  },
+  "500": {
+    "per_class": {
+      "A_direct": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      },
+      "B_paraphrase": {
+        "correct": 7,
+        "n": 14,
+        "rate": 0.5,
+        "ci95": [
+          0.268,
+          0.732
+        ]
+      },
+      "C_sibling": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      },
+      "D_lexical_trap": {
+        "correct": 1,
+        "n": 14,
+        "rate": 0.071,
+        "ci95": [
+          0.013,
+          0.315
+        ]
+      },
+      "E_pure_negative": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      }
+    },
+    "overall": {
+      "precision": 0.686,
+      "recall": 0.833,
+      "f1": 0.753,
+      "true_positive": 35,
+      "wrong_skill": 3,
+      "missed_abstained": 4,
+      "false_fire_on_negative": 13,
+      "median_ms": 101.86
+    },
+    "records": [
+      {
+        "class": "A_direct",
+        "query": "set the replicas under service to 4 in conf.yaml",
+        "expected": "yaml-single-key-edit",
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "merge two yaml files into one",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files",
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "pip install fails with externally managed environment",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch",
+          "npm-2"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "ModuleNotFoundError after the pip install succeeded",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch",
+          "pip-externally-managed-env"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "my interactive rebase hit a conflict",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "recover the branch I deleted by accident",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "my docker build reinstalls dependencies every time",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-layer-cache-miss",
+        "all": [
+          "docker-layer-cache-miss"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "the container exits immediately after docker run",
+        "expected": "docker-container-exits-immediately",
+        "got": "docker-container-exits-immediately",
+        "all": [
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "test passes alone but fails in the full suite",
+        "expected": "pytest-flaky-order-dependence",
+        "got": "pytest-flaky-order-dependence",
+        "all": [
+          "pytest-flaky-order-dependence"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "pytest errors during collection and no tests run",
+        "expected": "pytest-collection-error",
+        "got": "pytest-collection-error",
+        "all": [
+          "pytest-collection-error",
+          "pytest-6",
+          "pytest-16"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "explain analyze shows a sequential scan on a big table",
+        "expected": "postgres-missing-index-slow-query",
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "FATAL sorry too many clients already from postgres",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "uppercase a file that has accented characters",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "the script exits 0 but the output file is not there",
+        "expected": "bash-exit-code-hides-failure",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure",
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I need to bump one number in that settings document without disturbing anything else",
+        "expected": "yaml-single-key-edit",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I have a base config and an override and I want one document out of them",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "the package manager point blank refuses to put anything on this machine",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it said it installed fine and then python swore it had never heard of it",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I am halfway through replaying my commits and it has stopped on a clash",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "a whole day of work vanished when I reset and I need it back",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "every tiny code change makes the whole image build from scratch again",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-0",
+        "all": [
+          "docker-0",
+          "docker-10",
+          "docker-20"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it comes up and falls over straight away leaving nothing behind",
+        "expected": "docker-container-exits-immediately",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "everything is green one at a time and red all together",
+        "expected": "pytest-flaky-order-dependence",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "nothing at all executes, it falls over before it even starts",
+        "expected": "pytest-collection-error",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "reading one row out of that table takes several seconds",
+        "expected": "postgres-missing-index-slow-query",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "under load the app just cannot get hold of the database any more",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "turn all these names into capitals, some of them are foreign",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it always tells me it worked and I no longer believe it",
+        "expected": "bash-exit-code-hides-failure",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "C_sibling",
+        "query": "combine the base and the overlay config into a single document",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "change only the timeout key in settings.yaml, leave siblings alone",
+        "expected": "yaml-single-key-edit",
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "the install went through but the import still says no module named",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch",
+          "pytest-collection-error"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "pip will not install anything on this system at all",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "I need the commits back from a branch I removed",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "stopped mid rebase with a conflict, how do I continue",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "container starts and stops instantly with no logs",
+        "expected": "docker-container-exits-immediately",
+        "got": "docker-container-exits-immediately",
+        "all": [
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "nothing is ever cached between docker builds",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-layer-cache-miss",
+        "all": [
+          "docker-layer-cache-miss"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "pytest collects zero tests and exits",
+        "expected": "pytest-collection-error",
+        "got": "pytest-collection-error",
+        "all": [
+          "pytest-collection-error"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "the suite is flaky depending on what order things run in",
+        "expected": "pytest-flaky-order-dependence",
+        "got": "pytest-flaky-order-dependence",
+        "all": [
+          "pytest-flaky-order-dependence"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "we keep running out of database connections",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "this select is doing a seq scan and needs an index",
+        "expected": "postgres-missing-index-slow-query",
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "my build script reports success but produced no artifact",
+        "expected": "bash-exit-code-hides-failure",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "lowercase this text file including the accented letters",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a brand new yaml config file from scratch for a service with replicas",
+        "expected": null,
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit",
+          "yaml-merge-two-files"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "explain what yaml anchors and aliases are",
+        "expected": null,
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files",
+          "yaml-single-key-edit"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what does pip download actually do",
+        "expected": null,
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a python module and give it a good import name",
+        "expected": null,
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "explain the difference between git rebase and git merge conceptually",
+        "expected": null,
+        "got": "git-1",
+        "all": [
+          "git-1",
+          "git-11",
+          "git-21"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how do I create a new branch in git",
+        "expected": null,
+        "got": "git-1",
+        "all": [
+          "git-1",
+          "git-11",
+          "git-21"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a Dockerfile for a node application",
+        "expected": null,
+        "got": "docker-0",
+        "all": [
+          "docker-0",
+          "docker-10",
+          "docker-20"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what is the difference between a container and an image",
+        "expected": null,
+        "got": "docker-0",
+        "all": [
+          "docker-0",
+          "docker-10",
+          "docker-20"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a pytest fixture that returns a database session",
+        "expected": null,
+        "got": "pytest-6",
+        "all": [
+          "pytest-6",
+          "pytest-16",
+          "pytest-26"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how do I measure test coverage in this project",
+        "expected": null,
+        "got": "pytest-6",
+        "all": [
+          "pytest-6",
+          "pytest-16",
+          "pytest-26"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "design a postgres schema for an orders table with an index on customer id",
+        "expected": null,
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query",
+          "postgres-3",
+          "postgres-13"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how many connections does postgres support by default",
+        "expected": null,
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "convert this file from latin-1 encoding to utf-8",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what does the exit code of grep mean when there are no matches",
+        "expected": null,
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the capital of Australia",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "write a haiku about the sea",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "summarise this quarterly earnings report",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what time zone is Jakarta in",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "recommend a good book on macroeconomics",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "translate good morning into Portuguese",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "how do I change a flat tyre",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the offside rule in football",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "plan a three day trip to Kyoto",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "draft a polite email declining a meeting",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the boiling point of ethanol",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "explain the plot of Hamlet in two sentences",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "how long should I bake a sourdough loaf",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what are the main causes of inflation",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      }
+    ],
+    "library": 514
+  },
+  "2000": {
+    "per_class": {
+      "A_direct": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      },
+      "B_paraphrase": {
+        "correct": 7,
+        "n": 14,
+        "rate": 0.5,
+        "ci95": [
+          0.268,
+          0.732
+        ]
+      },
+      "C_sibling": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      },
+      "D_lexical_trap": {
+        "correct": 1,
+        "n": 14,
+        "rate": 0.071,
+        "ci95": [
+          0.013,
+          0.315
+        ]
+      },
+      "E_pure_negative": {
+        "correct": 14,
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          0.785,
+          1.0
+        ]
+      }
+    },
+    "overall": {
+      "precision": 0.686,
+      "recall": 0.833,
+      "f1": 0.753,
+      "true_positive": 35,
+      "wrong_skill": 3,
+      "missed_abstained": 4,
+      "false_fire_on_negative": 13,
+      "median_ms": 1042.43
+    },
+    "records": [
+      {
+        "class": "A_direct",
+        "query": "set the replicas under service to 4 in conf.yaml",
+        "expected": "yaml-single-key-edit",
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "merge two yaml files into one",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files",
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "pip install fails with externally managed environment",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch",
+          "npm-2"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "ModuleNotFoundError after the pip install succeeded",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch",
+          "pip-externally-managed-env"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "my interactive rebase hit a conflict",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "recover the branch I deleted by accident",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "my docker build reinstalls dependencies every time",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-layer-cache-miss",
+        "all": [
+          "docker-layer-cache-miss"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "the container exits immediately after docker run",
+        "expected": "docker-container-exits-immediately",
+        "got": "docker-container-exits-immediately",
+        "all": [
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "test passes alone but fails in the full suite",
+        "expected": "pytest-flaky-order-dependence",
+        "got": "pytest-flaky-order-dependence",
+        "all": [
+          "pytest-flaky-order-dependence"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "pytest errors during collection and no tests run",
+        "expected": "pytest-collection-error",
+        "got": "pytest-collection-error",
+        "all": [
+          "pytest-collection-error",
+          "pytest-6",
+          "pytest-16"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "explain analyze shows a sequential scan on a big table",
+        "expected": "postgres-missing-index-slow-query",
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "FATAL sorry too many clients already from postgres",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "uppercase a file that has accented characters",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "A_direct",
+        "query": "the script exits 0 but the output file is not there",
+        "expected": "bash-exit-code-hides-failure",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure",
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I need to bump one number in that settings document without disturbing anything else",
+        "expected": "yaml-single-key-edit",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I have a base config and an override and I want one document out of them",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "the package manager point blank refuses to put anything on this machine",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it said it installed fine and then python swore it had never heard of it",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "I am halfway through replaying my commits and it has stopped on a clash",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "a whole day of work vanished when I reset and I need it back",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "every tiny code change makes the whole image build from scratch again",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-0",
+        "all": [
+          "docker-0",
+          "docker-10",
+          "docker-20"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it comes up and falls over straight away leaving nothing behind",
+        "expected": "docker-container-exits-immediately",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "everything is green one at a time and red all together",
+        "expected": "pytest-flaky-order-dependence",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "nothing at all executes, it falls over before it even starts",
+        "expected": "pytest-collection-error",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "reading one row out of that table takes several seconds",
+        "expected": "postgres-missing-index-slow-query",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "under load the app just cannot get hold of the database any more",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "turn all these names into capitals, some of them are foreign",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "B_paraphrase",
+        "query": "it always tells me it worked and I no longer believe it",
+        "expected": "bash-exit-code-hides-failure",
+        "got": null,
+        "all": [],
+        "ok": false
+      },
+      {
+        "class": "C_sibling",
+        "query": "combine the base and the overlay config into a single document",
+        "expected": "yaml-merge-two-files",
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "change only the timeout key in settings.yaml, leave siblings alone",
+        "expected": "yaml-single-key-edit",
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "the install went through but the import still says no module named",
+        "expected": "pip-import-name-mismatch",
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch",
+          "pytest-collection-error"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "pip will not install anything on this system at all",
+        "expected": "pip-externally-managed-env",
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "I need the commits back from a branch I removed",
+        "expected": "git-recover-deleted-branch",
+        "got": "git-recover-deleted-branch",
+        "all": [
+          "git-recover-deleted-branch"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "stopped mid rebase with a conflict, how do I continue",
+        "expected": "git-rebase-conflict-resolve",
+        "got": "git-rebase-conflict-resolve",
+        "all": [
+          "git-rebase-conflict-resolve"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "container starts and stops instantly with no logs",
+        "expected": "docker-container-exits-immediately",
+        "got": "docker-container-exits-immediately",
+        "all": [
+          "docker-container-exits-immediately"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "nothing is ever cached between docker builds",
+        "expected": "docker-layer-cache-miss",
+        "got": "docker-layer-cache-miss",
+        "all": [
+          "docker-layer-cache-miss"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "pytest collects zero tests and exits",
+        "expected": "pytest-collection-error",
+        "got": "pytest-collection-error",
+        "all": [
+          "pytest-collection-error"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "the suite is flaky depending on what order things run in",
+        "expected": "pytest-flaky-order-dependence",
+        "got": "pytest-flaky-order-dependence",
+        "all": [
+          "pytest-flaky-order-dependence"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "we keep running out of database connections",
+        "expected": "postgres-connection-pool-exhausted",
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "this select is doing a seq scan and needs an index",
+        "expected": "postgres-missing-index-slow-query",
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "my build script reports success but produced no artifact",
+        "expected": "bash-exit-code-hides-failure",
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": true
+      },
+      {
+        "class": "C_sibling",
+        "query": "lowercase this text file including the accented letters",
+        "expected": "bash-unicode-case-conversion",
+        "got": "bash-unicode-case-conversion",
+        "all": [
+          "bash-unicode-case-conversion"
+        ],
+        "ok": true
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a brand new yaml config file from scratch for a service with replicas",
+        "expected": null,
+        "got": "yaml-single-key-edit",
+        "all": [
+          "yaml-single-key-edit",
+          "yaml-merge-two-files"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "explain what yaml anchors and aliases are",
+        "expected": null,
+        "got": "yaml-merge-two-files",
+        "all": [
+          "yaml-merge-two-files",
+          "yaml-single-key-edit"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what does pip download actually do",
+        "expected": null,
+        "got": "pip-externally-managed-env",
+        "all": [
+          "pip-externally-managed-env",
+          "pip-import-name-mismatch"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a python module and give it a good import name",
+        "expected": null,
+        "got": "pip-import-name-mismatch",
+        "all": [
+          "pip-import-name-mismatch"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "explain the difference between git rebase and git merge conceptually",
+        "expected": null,
+        "got": "git-1",
+        "all": [
+          "git-1",
+          "git-11",
+          "git-21"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how do I create a new branch in git",
+        "expected": null,
+        "got": "git-1",
+        "all": [
+          "git-1",
+          "git-11",
+          "git-21"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a Dockerfile for a node application",
+        "expected": null,
+        "got": "docker-0",
+        "all": [
+          "docker-0",
+          "docker-10",
+          "docker-20"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what is the difference between a container and an image",
+        "expected": null,
+        "got": "docker-0",
+        "all": [
+          "docker-0",
+          "docker-10",
+          "docker-20"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "write a pytest fixture that returns a database session",
+        "expected": null,
+        "got": "pytest-6",
+        "all": [
+          "pytest-6",
+          "pytest-16",
+          "pytest-26"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how do I measure test coverage in this project",
+        "expected": null,
+        "got": "pytest-6",
+        "all": [
+          "pytest-6",
+          "pytest-16",
+          "pytest-26"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "design a postgres schema for an orders table with an index on customer id",
+        "expected": null,
+        "got": "postgres-missing-index-slow-query",
+        "all": [
+          "postgres-missing-index-slow-query"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "how many connections does postgres support by default",
+        "expected": null,
+        "got": "postgres-connection-pool-exhausted",
+        "all": [
+          "postgres-connection-pool-exhausted"
+        ],
+        "ok": false
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "convert this file from latin-1 encoding to utf-8",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "D_lexical_trap",
+        "query": "what does the exit code of grep mean when there are no matches",
+        "expected": null,
+        "got": "bash-exit-code-hides-failure",
+        "all": [
+          "bash-exit-code-hides-failure"
+        ],
+        "ok": false
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the capital of Australia",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "write a haiku about the sea",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "summarise this quarterly earnings report",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what time zone is Jakarta in",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "recommend a good book on macroeconomics",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "translate good morning into Portuguese",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "how do I change a flat tyre",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the offside rule in football",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "plan a three day trip to Kyoto",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "draft a polite email declining a meeting",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what is the boiling point of ethanol",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "explain the plot of Hamlet in two sentences",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "how long should I bake a sourdough loaf",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      },
+      {
+        "class": "E_pure_negative",
+        "query": "what are the main causes of inflation",
+        "expected": null,
+        "got": null,
+        "all": [],
+        "ok": true
+      }
+    ],
+    "library": 2014
+  }
+}

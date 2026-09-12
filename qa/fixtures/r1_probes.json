@@ -1,0 +1,86 @@
+{
+  "A_direct": [
+    ["set the replicas under service to 4 in conf.yaml", "yaml-single-key-edit"],
+    ["merge two yaml files into one", "yaml-merge-two-files"],
+    ["pip install fails with externally managed environment", "pip-externally-managed-env"],
+    ["ModuleNotFoundError after the pip install succeeded", "pip-import-name-mismatch"],
+    ["my interactive rebase hit a conflict", "git-rebase-conflict-resolve"],
+    ["recover the branch I deleted by accident", "git-recover-deleted-branch"],
+    ["my docker build reinstalls dependencies every time", "docker-layer-cache-miss"],
+    ["the container exits immediately after docker run", "docker-container-exits-immediately"],
+    ["test passes alone but fails in the full suite", "pytest-flaky-order-dependence"],
+    ["pytest errors during collection and no tests run", "pytest-collection-error"],
+    ["explain analyze shows a sequential scan on a big table", "postgres-missing-index-slow-query"],
+    ["FATAL sorry too many clients already from postgres", "postgres-connection-pool-exhausted"],
+    ["uppercase a file that has accented characters", "bash-unicode-case-conversion"],
+    ["the script exits 0 but the output file is not there", "bash-exit-code-hides-failure"]
+  ],
+
+  "B_paraphrase": [
+    ["I need to bump one number in that settings document without disturbing anything else", "yaml-single-key-edit"],
+    ["I have a base config and an override and I want one document out of them", "yaml-merge-two-files"],
+    ["the package manager point blank refuses to put anything on this machine", "pip-externally-managed-env"],
+    ["it said it installed fine and then python swore it had never heard of it", "pip-import-name-mismatch"],
+    ["I am halfway through replaying my commits and it has stopped on a clash", "git-rebase-conflict-resolve"],
+    ["a whole day of work vanished when I reset and I need it back", "git-recover-deleted-branch"],
+    ["every tiny code change makes the whole image build from scratch again", "docker-layer-cache-miss"],
+    ["it comes up and falls over straight away leaving nothing behind", "docker-container-exits-immediately"],
+    ["everything is green one at a time and red all together", "pytest-flaky-order-dependence"],
+    ["nothing at all executes, it falls over before it even starts", "pytest-collection-error"],
+    ["reading one row out of that table takes several seconds", "postgres-missing-index-slow-query"],
+    ["under load the app just cannot get hold of the database any more", "postgres-connection-pool-exhausted"],
+    ["turn all these names into capitals, some of them are foreign", "bash-unicode-case-conversion"],
+    ["it always tells me it worked and I no longer believe it", "bash-exit-code-hides-failure"]
+  ],
+
+  "C_sibling": [
+    ["combine the base and the overlay config into a single document", "yaml-merge-two-files"],
+    ["change only the timeout key in settings.yaml, leave siblings alone", "yaml-single-key-edit"],
+    ["the install went through but the import still says no module named", "pip-import-name-mismatch"],
+    ["pip will not install anything on this system at all", "pip-externally-managed-env"],
+    ["I need the commits back from a branch I removed", "git-recover-deleted-branch"],
+    ["stopped mid rebase with a conflict, how do I continue", "git-rebase-conflict-resolve"],
+    ["container starts and stops instantly with no logs", "docker-container-exits-immediately"],
+    ["nothing is ever cached between docker builds", "docker-layer-cache-miss"],
+    ["pytest collects zero tests and exits", "pytest-collection-error"],
+    ["the suite is flaky depending on what order things run in", "pytest-flaky-order-dependence"],
+    ["we keep running out of database connections", "postgres-connection-pool-exhausted"],
+    ["this select is doing a seq scan and needs an index", "postgres-missing-index-slow-query"],
+    ["my build script reports success but produced no artifact", "bash-exit-code-hides-failure"],
+    ["lowercase this text file including the accented letters", "bash-unicode-case-conversion"]
+  ],
+
+  "D_lexical_trap": [
+    ["write a brand new yaml config file from scratch for a service with replicas", null],
+    ["explain what yaml anchors and aliases are", null],
+    ["what does pip download actually do", null],
+    ["write a python module and give it a good import name", null],
+    ["explain the difference between git rebase and git merge conceptually", null],
+    ["how do I create a new branch in git", null],
+    ["write a Dockerfile for a node application", null],
+    ["what is the difference between a container and an image", null],
+    ["write a pytest fixture that returns a database session", null],
+    ["how do I measure test coverage in this project", null],
+    ["design a postgres schema for an orders table with an index on customer id", null],
+    ["how many connections does postgres support by default", null],
+    ["convert this file from latin-1 encoding to utf-8", null],
+    ["what does the exit code of grep mean when there are no matches", null]
+  ],
+
+  "E_pure_negative": [
+    ["what is the capital of Australia", null],
+    ["write a haiku about the sea", null],
+    ["summarise this quarterly earnings report", null],
+    ["what time zone is Jakarta in", null],
+    ["recommend a good book on macroeconomics", null],
+    ["translate good morning into Portuguese", null],
+    ["how do I change a flat tyre", null],
+    ["what is the offside rule in football", null],
+    ["plan a three day trip to Kyoto", null],
+    ["draft a polite email declining a meeting", null],
+    ["what is the boiling point of ethanol", null],
+    ["explain the plot of Hamlet in two sentences", null],
+    ["how long should I bake a sourdough loaf", null],
+    ["what are the main causes of inflation", null]
+  ]
+}
