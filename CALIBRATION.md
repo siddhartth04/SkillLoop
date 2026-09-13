@@ -523,3 +523,22 @@ architecture - a real embedding model closes it. Config: SKILLLOOP_EMBED_MODEL e
 SKILLLOOP_HYBRID_LEXICAL_W / _EMBED_W / _EMBED_TOPK / _EMBED_THRESHOLD tune it.
 
 68->73 tests (added hybrid + intent + regression coverage).
+
+## 2026-09-12 — statistics correction (external review)
+
+An external reviewer correctly caught that the headline p-value was computed with the wrong unit of analysis.
+`report_ab.py` zipped control/treatment TRIAL-by-trial and counted 8 discordant trials as independent pairs
+(p=0.0078). But three repeated runs of the same task with the same skill are NOT independent - the independent
+unit is the TASK, and there are only three. The task-level sign test bottoms out at **p=0.25** with n=3, even
+for a perfect 3/3 split.
+
+Corrected: `report_ab.py` now aggregates to per-task outcomes and reports the task-level p as the headline,
+printing the per-trial p only with an explicit "anti-conservative, do not report" label. The README evidence
+table was rewritten from "demonstrated, p=0.0078" to "promising 3-task pilot, p=0.25 (underpowered)". The
+direction (3/3 tasks flipped fail→pass, two model families) is a clean signal; it is not yet significant.
+
+Also fixed from the same review: removed the orphan `n10_silent` control arm (no treatment arm shipped);
+replaced the non-PyPI `pip install skillloop` with a git-install line; fixed the `YOURORG` placeholder in
+pyproject.toml; fixed report_ab.py's hardcoded default input path; corrected the stale 66-tests badge to 72.
+
+The honest version is still interesting - and now the numbers match the data.
