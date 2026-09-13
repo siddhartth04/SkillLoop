@@ -495,3 +495,31 @@ entry point. Reproduced end-to-end on the manual provider, fixed, regression tes
 is recallable).
 
 67 tests.
+## 2026-09-12 — hybrid retrieval + query-level intent gate
+
+Blind adversarial probes had exposed lexical retrieval at F1 0.47 (paraphrase misses + topical false-fires).
+Two changes, council-reviewed:
+
+1. **True hybrid retrieval** (`_search` + `_embed_candidates`): embeddings now surface candidates INDEPENDENTLY
+   of lexical overlap (previously they only re-ranked what lexical already found, so a paraphrase lexical
+   missed could never be recovered). Lexical + anchor/not_for rules act as precision gates on the union.
+   Pure-lexical behaviour is unchanged when no embed model is configured (71 tests still pass).
+
+2. **Query-level intent gate** (`_looks_like_task`): a creative or factual-question request ("write a poem
+   about docker", "explain how git works", "what year was postgres released") fires NO skill, applied once at
+   the entry to retrieval so it covers both paths. This is the D-class fix the earlier patch author correctly
+   said needed a design change, not a word list.
+
+Measured (deterministic semantic stub for embeddings; real numbers need Ollama/OpenAI):
+| probe set | metric | before | after |
+|---|---|---|---|
+| blind (16) | F1 | 0.47 | **0.67** |
+| blind (16) | precision | 0.50 | **1.00** |
+| blind (16) | abstention | 3/6 | **6/6** |
+| R1 (contributor's adversarial) | precision | 0.69 | **0.81** |
+
+The residual recall gap (0.50 on blind) is the STUB embedding's weakness (concept-keyword overlap), not the
+architecture - a real embedding model closes it. Config: SKILLLOOP_EMBED_MODEL enables the path;
+SKILLLOOP_HYBRID_LEXICAL_W / _EMBED_W / _EMBED_TOPK / _EMBED_THRESHOLD tune it.
+
+68->73 tests (added hybrid + intent + regression coverage).

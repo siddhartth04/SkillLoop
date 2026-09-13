@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import math
+import re
 import os
 import threading
 import time
@@ -37,7 +38,10 @@ class SkillLoop:
         self._lessons_since_distill = 0
         self.recall_threshold = float(os.getenv("SKILLLOOP_RECALL_THRESHOLD", "0.08"))
         self.recall_margin = float(os.getenv("SKILLLOOP_RECALL_MARGIN", "0.55"))
-        self.embed_threshold = float(os.getenv("SKILLLOOP_EMBED_THRESHOLD", "0.35"))
+        self.embed_threshold = float(os.getenv("SKILLLOOP_EMBED_THRESHOLD", "0.45"))
+        self.embed_topk = int(os.getenv("SKILLLOOP_EMBED_TOPK", "10"))
+        self.hybrid_lexical_w = float(os.getenv("SKILLLOOP_HYBRID_LEXICAL_W", "0.5"))
+        self.hybrid_embed_w = float(os.getenv("SKILLLOOP_HYBRID_EMBED_W", "0.5"))
         self.query_threshold = float(os.getenv("SKILLLOOP_QUERY_THRESHOLD", "0.3"))
         self.duplicate_threshold = float(os.getenv("SKILLLOOP_DUPLICATE_THRESHOLD", "0.75"))
         if auto_process:
@@ -224,6 +228,11 @@ class SkillLoop:
         qt = self._terms(task)
         if not qt:
             return []
+        # INTENT GATE (query-level): a creative or factual-question request is not a task any procedural
+        # skill should answer. Applied once, before any retrieval path, so it covers lexical AND embedding.
+        if not self._looks_like_task(task):
+            self.store.log("recall_filtered", "*", f"non-task query, no skill fires :: {task[:60]}")
+            return []
         profiles = self._profiles(statuses)
         if not profiles:
             return []
@@ -265,29 +274,99 @@ class SkillLoop:
             # drop anything far weaker than the best match; a trailing weak hit is noise, not a second opinion
             best = keep[0][1]
             keep = [(sk, sc) for sk, sc in keep if sc >= best * self.recall_margin]
-        return self._blend_embeddings(task, keep, statuses)[:limit]
+        lexical = keep  # (skill, lexical_score) that passed the lexical gates above
 
-    def _blend_embeddings(self, task, keep, statuses):
+        # ---- HYBRID: let embeddings surface candidates lexical missed (paraphrase robustness) ----
+        emb_hits = self._embed_candidates(task, statuses)   # [(skill, cos)] above embed_threshold, or []
+        if not emb_hits:
+            return lexical[:limit]
+
+        # union by name; fuse scores. A skill strong on EITHER signal is a candidate; the precision gates
+        # (anchor / not_for / intent) below decide whether it actually fires.
+        lex = {sk.name: (sk, sc) for sk, sc in lexical}
+        fused: dict[str, tuple[Skill, float, float]] = {}
+        for name, (sk, lsc) in lex.items():
+            fused[name] = (sk, lsc, 0.0)
+        for sk, cos in emb_hits:
+            l = fused.get(sk.name, (sk, 0.0, 0.0))
+            fused[sk.name] = (sk, l[1], cos)
+
+        out = []
+        for name, (sk, lsc, cos) in fused.items():
+            # embedding-only candidate (lexical missed it): apply the SAME precision gates lexical uses, so a
+            # semantically-near but wrong-intent skill is still filtered. Reuses anchors + not_for.
+            if lsc == 0.0:
+                if not self._passes_precision_gate(task, sk):
+                    continue
+            # weighted fusion: reciprocal-rank-style blend, embeddings weighted for recall, lexical for precision
+            score = self.hybrid_lexical_w * min(1.0, lsc) + self.hybrid_embed_w * cos
+            out.append((sk, score))
+        out.sort(key=lambda x: -x[1])
+        # relative-margin prune, same discipline as lexical
+        if out and len(out) > 1:
+            best = out[0][1]
+            out = [(sk, sc) for sk, sc in out if sc >= best * self.recall_margin]
+        return out[:limit]
+
+    def _embed_candidates(self, task, statuses):
+        """Skills whose embedding is semantically near the query, independent of lexical overlap.
+        Returns [] when no embedding model is configured (pure-lexical fallback, unchanged behavior)."""
         emb_model = getattr(self._llm, "embed_model", None) if self._llm is not None else None
         if not emb_model:
-            return keep
+            return []
         try:
             qv = self.llm.embed([task])
         except Exception:
             qv = None
         if not qv:
-            return keep
+            return []
         q = qv[0]
-        merged: dict[str, tuple[Skill, float]] = {sk.name: (sk, sc) for sk, sc in keep}
+        out = []
         for sk in self.store.all_skills():
             if sk.status not in statuses or not sk.embedding:
                 continue
             cos = _cosine(q, sk.embedding)
-            if cos < self.embed_threshold:
-                continue
-            base = merged.get(sk.name, (sk, 0.0))[1]
-            merged[sk.name] = (sk, base + 0.5 * cos)
-        return sorted(merged.values(), key=lambda x: -x[1])
+            if cos >= self.embed_threshold:
+                out.append((sk, cos))
+        out.sort(key=lambda x: -x[1])
+        return out[: self.embed_topk]
+
+    # cheap intent heuristic: creative / factual-question requests are NOT tasks a procedural skill should
+    # answer. This is the D-class fix - "poem about docker" or "explain how git works" must not fire a skill.
+    _NON_TASK = re.compile(r"^\s*(write|compose|draft) (me )?(a |an )?(poem|haiku|song|story|essay|joke)"
+                           r"|^\s*(what|who|when|where|why|which|how) (is|are|was|were|does|do|did|year|does)"
+                           r"|^\s*explain\b|^\s*(recommend|suggest)\b|opinion\b|^\s*translate\b"
+                           r"|logo|to a (five|5).year.old", re.I)
+
+    def _looks_like_task(self, task: str) -> bool:
+        return not self._NON_TASK.search(task or "")
+
+    def _passes_precision_gate(self, task, sk) -> bool:
+        """The precision discipline applied to embedding-only candidates: the query must touch what the skill
+        IS (anchor overlap) OR match a trigger query, and must not hit a not_for term. Without this, a
+        semantically-adjacent skill would false-fire on topically-related but wrong-intent queries."""
+        # an embedding-only candidate answering a non-task (question/creative) request is a false fire
+        if not self._looks_like_task(task):
+            self.store.log("recall_filtered", sk.name, f"embed candidate, non-task query :: {task[:50]}")
+            return False
+        qt = self._terms(task)
+        _, _, anchors = self._profile_of(sk)
+        qsim = self._best_query_match(self._query_terms(task), sk)
+        if qsim < self.query_threshold and anchors and not (qt & anchors):
+            self.store.log("recall_filtered", sk.name, f"embed candidate, no anchor :: {task[:50]}")
+            return False
+        neg = self._terms(" ".join((sk.facets or {}).get("not_for", []))) - anchors
+        if neg & qt:
+            self.store.log("recall_filtered", sk.name, f"embed candidate, not_for {sorted(neg & qt)[:3]}")
+            return False
+        return True
+
+    def _profile_of(self, sk):
+        """Single-skill profile (weighted terms + anchors), reusing the same logic as _profiles."""
+        for s2, prof, anch in self._profiles((sk.status,)):
+            if s2.name == sk.name:
+                return s2, prof, anch
+        return sk, {}, set()
 
     def session(self, task: str, agent: str = "", metadata: dict | None = None, auto_learn: bool = True):
         """Record a task and submit it on exit. See record.py - this is the easy path to learn()."""

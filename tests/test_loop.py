@@ -971,3 +971,19 @@ def test_profile_cache_invalidates_across_processes(tmp_path):
                        triggers=["task retries forever"], snapshot=False)
     assert "celery-task-retry" in [h["name"] for h in a.recall("my celery task retries forever", limit=2)], \
         "A served a stale cache after B wrote to the same database"
+
+
+def test_intent_gate_blocks_non_task_queries(loop):
+    """Hybrid-retrieval council fix: creative/factual-question requests must fire NO skill, even when they
+    share a topic word with a real skill ('poem about docker' vs a docker skill)."""
+    from skillloop.store import Skill
+    from skillloop.playbook import new_bullet
+    loop.store.save_skill(Skill(name="docker-crashloop", description="x", body="", status="candidate",
+        bullets=[new_bullet("procedure", "inspect logs"), new_bullet("verification", "`docker ps` shows running")],
+        facets={"applies_when": ["docker container exits", "crashloop"], "symptoms": [], "not_for": []},
+        queries=["container starts then dies"]), triggers=[], snapshot=False)
+    assert loop.recall("write me a poem about docker whales") == []
+    assert loop.recall("explain how docker works to a five year old") == []
+    assert loop.recall("what year was docker released") == []
+    # a real task query still fires
+    assert [h["name"] for h in loop.recall("my container starts then dies")] == ["docker-crashloop"]
