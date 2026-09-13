@@ -63,7 +63,9 @@ Follow the loop in the diagram above. Here is exactly what happens on each pass:
 ## Quickstart
 
 ```bash
-pip install "skillloop[openai]"     # or [anthropic]; core is stdlib-only
+# not on PyPI yet - install from source:
+pip install "skillloop[openai] @ git+https://github.com/siddhartth04/SkillLoop"
+# or clone and: pip install -e ".[openai]"     # [anthropic] also available; core is stdlib-only
 ```
 
 ```python
@@ -84,16 +86,18 @@ That's the whole integration. The `session` records the trajectory and submits i
 
 This project's defining trait is that **it does not overclaim.**
 
-### ✅ Demonstrated — pre-registered, independently checked
+### 🟡 Promising pilot — pre-registered, honest about power
 
-On tasks a baseline agent **reliably fails**, attaching learned skills raised success dramatically — replicated across two independent model families, statistics fixed *before* results were seen:
+On **3 necessity-screened tasks** (each run 3×), where a baseline agent reliably fails, attaching learned skills flipped every task to success — replicated in direction across two model families. Statistics were fixed before results were seen.
 
-| Agent | Without skills | With skills | Sign-test *p* |
-|:--|:--:|:--:|:--:|
-| gpt-oss-20b | 1 / 9 · 11% | **9 / 9 · 100%** | **0.0078** |
-| qwen3.8-27b | 3 / 9 · 33% | **9 / 9 · 100%** | **0.0312** |
+| Agent | Tasks (control → treat) | Task-level sign test |
+|:--|:--:|:--:|
+| gpt-oss-20b | 3/3 tasks flipped fail → pass | p = 0.25 *(underpowered)* |
+| qwen3.8-27b | 3/3 tasks flipped fail → pass | p = 0.25 *(underpowered)* |
 
-Two independent skills — one lucky skill isn't carrying the result. The agent followed the skill's procedure *verbatim*. Reproduce: `python qa/report_ab.py evidence/ab.json`.
+**Read this honestly.** The independent unit is the *task*, and there are only three. Three tasks cannot reach p < 0.05 even with a perfect split — the sign test bottoms out at p = 0.25. So this is a **promising 3-task pilot with a clean directional signal**, *not* a significant result yet. (A per-trial test gives p = 0.0078, but repeated runs of the same task aren't independent, so that number is anti-conservative and we don't report it.) Reproduce and see for yourself: `python qa/report_ab.py evidence/ab.json`.
+
+**To earn a real claim, the project needs more distinct tasks** — the HumanEval+ run (in progress) is the path there.
 
 ### ⚠️ Caveats that travel with those numbers
 
