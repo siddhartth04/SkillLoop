@@ -22,7 +22,7 @@ dev = ["pytest>=7"]
 skillloop = "skillloop.cli:main"
 
 [project.urls]
-Source = "https://github.com/YOURORG/skillloop"
+Source = "https://github.com/siddhartth04/SkillLoop"
 
 [tool.setuptools.packages.find]
 include = ["skillloop*"]
