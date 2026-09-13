@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/skillloop-banner.png" alt="SkillLoop" width="720"/>
+<img src="assets/skillloop-banner.png" alt="SkillLoop — procedural memory for LLM agents that learns skills from failure and gates them on a verification test" width="720"/>
 
 <p align="center">
   <img src="https://img.shields.io/badge/tests-72%20passing-18181b?style=for-the-badge" alt="tests"/>
@@ -8,6 +8,8 @@
   <img src="https://img.shields.io/badge/license-MIT-8b5cf6?style=for-the-badge" alt="license"/>
   <a href="CALIBRATION.md"><img src="https://img.shields.io/badge/evidence-pre--registered-a855f7?style=for-the-badge" alt="evidence"/></a>
 </p>
+
+<h3 align="center">Procedural memory for LLM agents — learn skills from failure, verify them before the agent trusts them.</h3>
 
 <p align="center"><b>Your agent keeps making the same mistake every session. SkillLoop makes it stop.</b></p>
 
@@ -28,7 +30,7 @@
 
 LLM agents have amnesia. Every session starts from zero. An agent that failed a task yesterday, figured out the fix, and succeeded — makes the **same mistake tomorrow**. On its 100th task it's no better than its 1st.
 
-Most "agent memory" tools remember *facts about the user* ("prefers TypeScript") or raw chat history. SkillLoop remembers **how to do the work** — a *procedure*, learned from what went wrong, and **verified by a test before the agent is ever allowed to trust it**.
+**SkillLoop is a test-gated procedural-memory layer for LLM agents.** Most agent-memory tools (Mem0, Letta, Zep) store *semantic memory* — facts about the user — or *episodic memory* — raw chat history. SkillLoop stores **procedural memory**: *how to do the work*, learned from failures and **verified by a test before the agent is ever allowed to trust it**. It works with any agent framework and any model provider (OpenAI, Anthropic, Groq, Ollama, and more).
 
 ## Architecture
 
