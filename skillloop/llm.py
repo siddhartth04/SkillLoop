@@ -109,8 +109,8 @@ class LLM:
                 self._key_idx = 0
             self._key_cooldown: dict[int, float] = {}   # key index -> unix time it becomes usable again
             self._base_url = os.getenv("OPENAI_BASE_URL") or None
-            self.client = openai.OpenAI(api_key=self._keys[self._key_idx], base_url=self._base_url, timeout=120.0,
-                                        max_retries=1)
+            self.client = openai.OpenAI(api_key=self._keys[self._key_idx], base_url=self._base_url,
+                                        timeout=_request_timeout(), max_retries=1)
             default = model or os.getenv("SKILLLOOP_MODEL", "gpt-4.1-mini")
         elif provider == "manual":
             import pathlib
@@ -160,7 +160,8 @@ class LLM:
             j = (self._key_idx + step) % len(self._keys)
             if self._key_cooldown.get(j, 0) <= now:
                 self._key_idx = j
-                self.client = openai.OpenAI(api_key=self._keys[j], base_url=self._base_url, timeout=120.0, max_retries=1)
+                self.client = openai.OpenAI(api_key=self._keys[j], base_url=self._base_url,
+                                        timeout=_request_timeout(), max_retries=1)
                 self.calls.append({"role": "_rotate", "model": f"key#{j}", "ms": 0, "ok": True})
                 return True
         return False
@@ -245,6 +246,21 @@ class LLM:
         if LLM._fake_handler:
             return LLM._fake_handler(system, user)
         return "{}"
+
+
+
+def _request_timeout() -> float:
+    """Seconds to wait for one completion before giving up on it.
+
+    A hung socket is indistinguishable from a slow model, and the learning pipeline makes several calls in
+    sequence per trace (reflect, skeptic, synthesize, judge), so one stalled connection can look like a dead
+    process for many minutes. A bounded timeout turns that into a retry, which the key pool absorbs.
+    Raise SKILLLOOP_TIMEOUT for models that genuinely need longer.
+    """
+    try:
+        return max(5.0, float(os.getenv("SKILLLOOP_TIMEOUT", "90")))
+    except ValueError:
+        return 90.0
 
 
 def _retry_after(e: Exception) -> tuple[float | None, bool]:
