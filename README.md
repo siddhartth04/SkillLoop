@@ -3,7 +3,7 @@
 <img src="assets/skillloop-banner.png" alt="SkillLoop — procedural memory for LLM agents that learns skills from failure and gates them on a verification test" width="720"/>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/tests-108%20passing-18181b?style=for-the-badge" alt="tests"/>
+  <img src="https://img.shields.io/badge/tests-109%20passing-18181b?style=for-the-badge" alt="tests"/>
   <img src="https://img.shields.io/badge/python-3.10%2B-6366f1?style=for-the-badge" alt="python"/>
   <img src="https://img.shields.io/badge/license-MIT-8b5cf6?style=for-the-badge" alt="license"/>
   <a href="CALIBRATION.md"><img src="https://img.shields.io/badge/evidence-pre--registered-a855f7?style=for-the-badge" alt="evidence"/></a>

@@ -159,6 +159,14 @@ class SkillLoop(RetrievalMixin):
         with obs.request("learn", task=t.task[:80] if hasattr(t, "task") else None):
             t, san = sanitize_trace(t)
             self.store.add_trace(t)
+            if t.eval_id:
+                # A verification re-run is EVIDENCE ABOUT a skill, not a new lesson to learn from. Leaving it
+                # in the queue made the loop feed itself: the re-run became training data, produced another
+                # skill, queued another host eval, and that second eval ran without the skill in its prompt
+                # and failed - so every skill ended with equal passed/failed evals and was demoted to
+                # quarantine no matter how well it actually performed (see CALIBRATION.md, 2026-09-25).
+                # It is still stored, so the audit trail is complete; it is simply not re-learned from.
+                self.store.mark_processed(t.id)
             obs.log("trace.sanitized", trace_id=t.id, redacted=san.get("redacted"),
                     steps_dropped=san.get("steps_dropped"), final_chars=san.get("final_chars"))
             return self._learn_body(t, san)

@@ -288,3 +288,33 @@ def test_a_trace_that_errors_warns_instead_of_silently_producing_no_skill(loop):
     msgs = [str(w.message) for w in caught if "produced no skill" in str(w.message)]
     assert msgs, "a trace that raises must warn, not fail silently"
     assert "UnicodeEncodeError" in msgs[0], "the warning must name the error kind"
+
+
+def test_a_verification_rerun_is_not_itself_learned_from(loop):
+    """A host eval is evidence ABOUT a skill, not a new lesson.
+
+    When run_pending_evals() fed its re-run back through learn(), the re-run became training data: it
+    produced a second skill, which queued a second host eval, which ran WITHOUT the skill in its prompt and
+    failed. Every skill therefore ended with exactly as many failed evals as passed ones and was demoted to
+    quarantine regardless of how well it had actually performed. Seed 4 of the conventions eval showed all
+    seven skills quarantined while their re-runs were passing 3/3.
+    """
+    run_agent(loop, "install pandas and build the weekly report")
+    loop.process()
+    n_before = loop.store.db.execute("SELECT COUNT(*) FROM traces").fetchone()[0]
+
+    def runner(task, skill_md):
+        s = loop.session(task, auto_learn=False)
+        s.tool("bash", {"cmd": "follow the skill"}, result="ok")
+        return s.verified_by(0)
+
+    loop.run_pending_evals(runner)
+    while loop.store.pending_traces(1):          # a worker or a resume would drain this
+        loop.process()
+
+    assert learned(loop)["verify-pip-install"] == "active", "a passing re-run must reach active and stay"
+    failed = loop.store.db.execute("SELECT COUNT(*) FROM evals WHERE status='failed'").fetchone()[0]
+    assert failed == 0, "no host eval should have failed; a second self-inflicted eval is the bug"
+    n_after = loop.store.db.execute("SELECT COUNT(*) FROM traces").fetchone()[0]
+    assert n_after > n_before, "the re-run is still recorded, for the audit trail"
+    assert not loop.store.pending_traces(1), "but it must not sit in the learning queue"
