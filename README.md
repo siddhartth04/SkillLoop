@@ -219,7 +219,7 @@ python -m qa.conv_eval.run --selfcheck      # generator, checkers, gates, stats 
 
 ### 🔬 What we're proudest of
 
-SkillLoop **caught its own false positives six times** during development — impossible task checkers, a hallucinating agent model, a GIL-masked concurrency test, rate-limit errors miscounted as failures, a wrong-interpreter checker, and a text encoding that silently destroyed five of six learned skills and very nearly published a clean, plausible result *against* the project's own central claim. Each would have manufactured a fake result. All documented in [`CALIBRATION.md`](CALIBRATION.md), including the experiments that *failed*. The rigor is the point.
+SkillLoop **caught its own false positives seven times** during development — impossible task checkers, a hallucinating agent model, a GIL-masked concurrency test, rate-limit errors miscounted as failures, a wrong-interpreter checker, a text encoding that silently destroyed five of six learned skills, and a verification loop that fed itself and demoted every skill that had just passed. The last two each produced a clean, plausible result *against* the project's own central claim. Each would have manufactured a fake result. All documented in [`CALIBRATION.md`](CALIBRATION.md), including the experiments that *failed*. The rigor is the point.
 
 ### 🎯 Retrieval: does the lesson come back when it matters?
 

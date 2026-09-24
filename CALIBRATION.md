@@ -3,6 +3,37 @@
 Run `skillloop calibrate` whenever you change a model or a prompt. This file records what past runs found and
 what changed because of them, so the prompts have a paper trail.
 
+## 2026-09-25 (later) — the verification loop was feeding itself
+
+**The seventh self-caught false positive, found in the re-run of the sixth.**
+
+With the encoding bug fixed, seed 4 was re-run. The promotion log showed skills passing their re-runs:
+
+```
+promotion re-runs: [('inspect-return-type', 'success'), ('inspect-return-type', 'success'),
+                    ('inspect-return-type', 'success'), ('bruzem-numeric-units', 'success'), ...]
+skills learned:    {'inspect-return-type': 'quarantine', 'bruzem-numeric-units': 'quarantine', ...}
+```
+
+Two skills passed their verification 3/3 and both ended in `quarantine`. All seven did.
+
+The eval table showed the signature: **every skill had exactly as many `failed` host evals as `passed`
+ones** — 3/3, 2/2, 4/4. And the trace table had grown from 18 training tasks to 36 traces.
+
+`run_pending_evals()` handed its re-run to `learn()`, which queued it like any other trajectory. `process()`
+then treated that verification run as a *new lesson*: it synthesised another skill from it, and that skill
+queued another host eval. The second eval was a fresh trace with no skill in its prompt, so it failed — and
+the failure demoted the skill that had just passed.
+
+A verification re-run is **evidence about a skill, not a lesson to learn from**. It is now stored for the
+audit trail but marked processed, so it never re-enters the learning queue.
+
+**Why this one is worth recording:** the bug was introduced by the very change that was meant to strengthen
+the evaluation — wiring the gate into the eval so that promotion was actually exercised. Before that change
+the gate never ran and every skill sat at `candidate`; after it, the gate ran and rejected everything. Both
+states produce a plausible-looking report, and neither is a measurement. Verified both directions after the
+fix: a passing re-run reaches `active` with zero failed evals, a failing one still lands in `quarantine`.
+
 ## 2026-09-25 — a text encoding nearly manufactured a negative result
 
 **The sixth self-caught false positive, and the closest call so far.**
