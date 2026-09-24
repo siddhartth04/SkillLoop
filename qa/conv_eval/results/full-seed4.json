@@ -1,0 +1,2447 @@
+{
+  "seeds": [
+    4
+  ],
+  "per_seed": {
+    "4": {
+      "gates": {
+        "null_agreement": 0.944,
+        "null_ok": true,
+        "control_rate": 0.222,
+        "oracle_rate": 1.0,
+        "headroom_ok": true,
+        "harness_error_rate": 0.0,
+        "harness_ok": true,
+        "pass": true
+      },
+      "quirks": [
+        "cents",
+        "index",
+        "keys",
+        "range",
+        "tuple",
+        "units"
+      ],
+      "skills": {
+        "verify-api-parameters": "quarantine",
+        "verify-config-key": "quarantine",
+        "bruzem-config-timeout-verification": "quarantine",
+        "int-amount-bill": "quarantine",
+        "inspect-returned-object": "candidate",
+        "check-function-indexing": "quarantine"
+      },
+      "train_success": 5
+    }
+  },
+  "primary": {
+    "control": {
+      "k": 4,
+      "n": 18,
+      "rate": 0.222,
+      "ci95": [
+        0.09,
+        0.45
+      ],
+      "harness_errors": 0
+    },
+    "control_repeat": {
+      "k": 5,
+      "n": 18,
+      "rate": 0.278,
+      "ci95": [
+        0.12,
+        0.51
+      ],
+      "harness_errors": 0
+    },
+    "oracle": {
+      "k": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci95": [
+        0.82,
+        1.0
+      ],
+      "harness_errors": 0
+    },
+    "memory": {
+      "k": 11,
+      "n": 18,
+      "rate": 0.611,
+      "ci95": [
+        0.39,
+        0.8
+      ],
+      "harness_errors": 0
+    },
+    "skillloop": {
+      "k": 8,
+      "n": 18,
+      "rate": 0.444,
+      "ci95": [
+        0.25,
+        0.66
+      ],
+      "harness_errors": 0
+    }
+  },
+  "first_try": {
+    "control": {
+      "k": 1,
+      "n": 18,
+      "rate": 0.056,
+      "ci95": [
+        0.01,
+        0.26
+      ],
+      "harness_errors": 0
+    },
+    "control_repeat": {
+      "k": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci95": [
+        0.0,
+        0.18
+      ],
+      "harness_errors": 0
+    },
+    "oracle": {
+      "k": 17,
+      "n": 18,
+      "rate": 0.944,
+      "ci95": [
+        0.74,
+        0.99
+      ],
+      "harness_errors": 0
+    },
+    "memory": {
+      "k": 5,
+      "n": 18,
+      "rate": 0.278,
+      "ci95": [
+        0.12,
+        0.51
+      ],
+      "harness_errors": 0
+    },
+    "skillloop": {
+      "k": 4,
+      "n": 18,
+      "rate": 0.222,
+      "ci95": [
+        0.09,
+        0.45
+      ],
+      "harness_errors": 0
+    }
+  },
+  "harm_notrap": {
+    "control": {
+      "k": 3,
+      "n": 3,
+      "rate": 1.0,
+      "ci95": [
+        0.44,
+        1.0
+      ],
+      "harness_errors": 0
+    },
+    "control_repeat": {
+      "k": 3,
+      "n": 3,
+      "rate": 1.0,
+      "ci95": [
+        0.44,
+        1.0
+      ],
+      "harness_errors": 0
+    },
+    "oracle": {
+      "k": 3,
+      "n": 3,
+      "rate": 1.0,
+      "ci95": [
+        0.44,
+        1.0
+      ],
+      "harness_errors": 0
+    },
+    "memory": {
+      "k": 3,
+      "n": 3,
+      "rate": 1.0,
+      "ci95": [
+        0.44,
+        1.0
+      ],
+      "harness_errors": 0
+    },
+    "skillloop": {
+      "k": 3,
+      "n": 3,
+      "rate": 1.0,
+      "ci95": [
+        0.44,
+        1.0
+      ],
+      "harness_errors": 0
+    }
+  },
+  "paired": {
+    "skillloop_vs_control": {
+      "n": 18,
+      "wins": 4,
+      "losses": 0,
+      "p": 0.125
+    },
+    "skillloop_vs_memory": {
+      "n": 18,
+      "wins": 1,
+      "losses": 4,
+      "p": 0.375
+    },
+    "memory_vs_control": {
+      "n": 18,
+      "wins": 7,
+      "losses": 0,
+      "p": 0.01562
+    }
+  },
+  "verdict": "No significant improvement over control.",
+  "episodes": {
+    "control": {
+      "s4-index-3": {
+        "task_id": "s4-index-3",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [64, 86, 46, 65, 67, 30, 39]\n\n# Get the 3rd element (1-indexed)\nresult = bruzem.at(data, 3)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-3": {
+        "task_id": "s4-range-3",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [40, 25, 52, 32, 47, 68, 13]\n\n# Get elements at indices 3 and 4 using the window function\nresult = bruzem.window(data, 3, 4)\n\nprint(result)  # Expected output: [32, 47]",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [40, 25, 52, 32, 47, 68, 13]\n\n# window's end index is exclusive, so use 5 to include index 4\nresult = bruzem.window(data, 3, 5)\n\nprint(result)  # Expected output: [32, 47]",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-4": {
+        "task_id": "s4-range-4",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [15, 55, 20, 46, 96, 51, 12]\nresult = bruzem.window(data, 1, len(data) - 1)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [15, 55, 20, 46, 96, 51, 12]\n# window is end-exclusive, so use len(data) to include the last element\nresult = bruzem.window(data, 1, len(data))",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-5": {
+        "task_id": "s4-range-5",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [51, 46, 29, 93, 62, 89, 97]\nresult = bruzem.window(data, 2, 5)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [51, 46, 29, 93, 62, 89, 97]\n# window uses start inclusive and end exclusive, so use 6 to include index 5\nresult = bruzem.window(data, 2, 6)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-3": {
+        "task_id": "s4-units-3",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\nresult = bruzem.create_task('backup', 38)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzel  # Note: corrected import name if needed; adjust to actual module name\n\n# Create the backup task with a 38-second timeout\nresult = bruzel.create_task(name='backup', timeout=38)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "Traceback (most recent call last):\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-5vuzqsvz\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 1, in <module>\nModuleNotFoundError: No module named 'bruzel'"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-4": {
+        "task_id": "s4-units-4",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create a job named 'import' with a timeout of 1.5 minutes\nresult = bruzem.create_task('import', 1.5)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Create a job named 'import' with a timeout of 1.5 minutes (90 seconds)\nresult = bruzem.create_task('import', 90)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-5": {
+        "task_id": "s4-units-5",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create the tasks with specified names and timeouts\njob_a = bruzem.create_task('a', 5)\njob_b = bruzem.create_task('b', 10)\njob_c = bruzem.create_task('c', 20)\n\n# Store them in a list as the result\nresult = [job_a, job_b, job_c]",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Create the tasks with the specified names and timeouts\nresult = [\n    bruzem.create_task('a', 5),\n    bruzem.create_task('b', 10),\n    bruzem.create_task('c', 20)\n]",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-3": {
+        "task_id": "s4-keys-3",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Set the maximum number of retries to 6\nbruzem.configure({'max retries': 6})\n\n# Optional: retrieve the current configuration to verify\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Set the maximum number of retries to 6\nbruzem.configure({'max retries': 6})\n\n# Retrieve the configuration and store the max retries value in result\nconfig = bruzem.get_config()\nresult = config.get('max retries')",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-4": {
+        "task_id": "s4-keys-4",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Set the log level to 'error' using the configure function\nbruzem.configure({'log level': 'error'})\n\n# No specific result required; indicate completion\nresult = None",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Set the log level to 'error'\nbruzem.configure({'log level': 'error'})\n\n# Return the updated log level to confirm the configuration\nresult = bruzem.get_config().get('log level')",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-5": {
+        "task_id": "s4-keys-5",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Set configuration: log level to 'trace' and max retries to 4\nbruzem.configure({\n    \"log level\": \"trace\",\n    \"max retries\": 4\n})\n\n# Optional: retrieve the current configuration to verify\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Configure the library with the required settings\nbruzem.configure({\n    \"log_level\": \"trace\",\n    \"max_retries\": 4\n})\n\n# Capture the current configuration for verification\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-commit-notrap": {
+        "task_id": "s4-commit-notrap",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "from bruzem import Store\n\n# Create a new store instance\nstore = Store()\n\n# Store the key-value pair permanently\nstore.put('count', 82)\nstore.commit(confirm=True)  # commit with confirmation to persist the data\n\n# Verify that the value was persisted by loading the stored data\nresult = Store.load().get('count')",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-3": {
+        "task_id": "s4-cents-3",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge $7 using the bill function\nresult = bruzem.bill(7)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Charge $7 using the bill function (amount as a string with currency symbol)\nresult = bruzem.bill(\"$7\")",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-lepkjhbv\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 4, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-lepkjhbv\\bruzem.py\", line 84, in bill\n    raise TypeError(\"amount must be an int\")\nTypeError: amount must be an int"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-4": {
+        "task_id": "s4-cents-4",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge 25 cents and store the receipt in result\nresult = bruzem.bill(0.25)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-tjy1bg_t\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 4, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-tjy1bg_t\\bruzem.py\", line 84, in bill\n    raise TypeError(\"amount must be an int\")\nTypeError: amount must be an int"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Charge 25 cents (as an integer amount) and store the receipt in result\nresult = bruzem.bill(25)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-5": {
+        "task_id": "s4-cents-5",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge the combined amount of $1.10 and $2.30\nresult = bruzem.bill(1.10 + 2.30)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-gai18ceh\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 4, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-gai18ceh\\bruzem.py\", line 84, in bill\n    raise TypeError(\"amount must be an int\")\nTypeError: amount must be an int"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Charge the combined amount of $1.10 and $2.30 (converted to cents)\ntotal_cents = 110 + 230  # 340 cents\nresult = bruzem.bill(total_cents)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-3": {
+        "task_id": "s4-tuple-3",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Retrieve the value associated with the key 'omega'\nresult = bruzem.find('omega')",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzet  # Note: ensure the correct module name is used\n\n# Retrieve the value associated with the key 'omega' using the provided API.\n# If the key is missing, raise an informative error.\nvalue = bruzet.find('omega')\nif value is None:\n    raise KeyError(\"Key 'omega' not found in the store.\")\nresult = value",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "Traceback (most recent call last):\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-dt1fy51r\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 1, in <module>\nModuleNotFoundError: No module named 'bruzet'"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-4": {
+        "task_id": "s4-tuple-4",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\nalpha = bruzem.find('alpha')\ngamma = bruzem.find('gamma')\nomega = bruzem.find('omega')\n\nresult = max(alpha, gamma, omega)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndef _extract_comparable(val):\n    \"\"\"\n    Convert the raw value returned by `bruzem.find` into a comparable\n    numeric type if possible. Handles:\n    - plain numbers (int, float)\n    - numeric strings\n    - dictionaries with a 'value' key containing a number or numeric string\n    Falls back to the original value if conversion fails.\n    \"\"\"\n    # If it's a dict with a 'value' entry, use that\n    if isinstance(val, dict) and 'value' in val:\n        val = val['value']\n\n    # Try integer conversion\n    try:\n        return int(val)\n    except (TypeError, ValueError):\n        pass\n\n    # Try float conversion\n    try:\n        return float(val)\n    except (TypeError, ValueError):\n        pass\n\n    # Return original value as a last resort (e.g., already comparable)\n    return val\n\n# Retrieve the three stored values\nalpha = bruzem.find('alpha')\ngamma = bruzem.find('gamma')\nomega = bruzem.find('omega')\n\n# Convert them to comparable forms\nalpha_cmp = _extract_comparable(alpha)\ngamma_cmp = _extract_comparable(gamma)\nomega_cmp = _extract_comparable(omega)\n\n# Determine the largest value\nresult = max(alpha_cmp, gamma_cmp, omega_cmp)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-5": {
+        "task_id": "s4-tuple-5",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Retrieve the stored values for the specified keys\nsigma_value = bruzem.find('sigma')\nkappa_value = bruzem.find('kappa')\n\n# Build the dictionary mapping each key to its value\nresult = {\n    'sigma': sigma_value,\n    'kappa': kappa_value\n}",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Build the dictionary mapping 'sigma' and 'kappa' to their stored values\nresult = {key: bruzem.find(key) for key in ('sigma', 'kappa')}",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-inplace-notrap": {
+        "task_id": "s4-inplace-notrap",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [28, 9, 5, 11, 2, 9, 11, 28]\nresult = bruzem.dedupe(data)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-index-4": {
+        "task_id": "s4-index-4",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "from bruzem import at\n\ndata = [49, 43, 15, 20, 69, 90, 45]\nresult = at(data, len(data) - 1)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "from bruze m import at\n\ndata = [49, 43, 15, 20, 69, 90, 45]\n# `at` uses 1\u2011based indexing, so the last element is at position len(data)\nresult = at(data, len(data))",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "    exec(compile(code, \"<agent>\", \"exec\"), ns)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<agent>\", line 1\n    from bruze m import at\n               ^\nSyntaxError: invalid syntax"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-index-5": {
+        "task_id": "s4-index-5",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [76, 78, 92, 70, 53, 28, 96]\n\nresult = []\nfor i in range(len(data) - 1, -1, -1):\n    result.append(bruzem.at(data, i))\n\n# result now holds the reversed list",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-juuuwiud\\runner.py\", line 9, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 7, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-juuuwiud\\bruzem.py\", line 12, in at\n    raise IndexError(f\"position {pos} out of range\")\nIndexError: position 0 out of range"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [76, 78, 92, 70, 53, 28, 96]\n\nresult = []\n# bruzem.at uses 1\u2011based indexing, so iterate from len(data) down to 1\nfor i in range(len(data), 0, -1):\n    result.append(bruzem.at(data, i))\n\n# result now contains the reversed list",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-desc-notrap": {
+        "task_id": "s4-desc-notrap",
+        "condition": "control",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [79, 72, 84, 41, 51, 14, 25]\n\nsorted_data = bruzem.order(data)\nresult = bruzem.at(sorted_data, len(sorted_data) - 1)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [79, 72, 84, 41, 51, 14, 25]\n\n# Sort the data in ascending order\nsorted_data = bruzem.order(data)\n\n# `at` uses 1\u2011based indexing, so the largest element is at position len(sorted_data)\nresult = bruzem.at(sorted_data, len(sorted_data))",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      }
+    },
+    "control_repeat": {
+      "s4-index-3": {
+        "task_id": "s4-index-3",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "from bruzem import at\n\ndata = [64, 86, 46, 65, 67, 30, 39]\nresult = at(data, 2)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "from bruzem import at\n\ndata = [64, 86, 46, 65, 67, 30, 39]\n# Use 1-based position to get the 3rd element\nresult = at(data, 3)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-index-5": {
+        "task_id": "s4-index-5",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [76, 78, 92, 70, 53, 28, 96]\n\nresult = []\nfor i in range(len(data) - 1, -1, -1):\n    result.append(bruzem.at(data, i))",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-hhzvtcv9\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 7, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-hhzvtcv9\\bruzem.py\", line 12, in at\n    raise IndexError(f\"position {pos} out of range\")\nIndexError: position 0 out of range"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [76, 78, 92, 70, 53, 28, 96]\n\nresult = []\nfor i in range(len(data), 0, -1):\n    result.append(bruzem.at(data, i))",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-3": {
+        "task_id": "s4-range-3",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [40, 25, 52, 32, 47, 68, 13]\nresult = bruzem.window(data, 3, 4)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [40, 25, 52, 32, 47, 68, 13]\n# window uses a start index (inclusive) and an end index (exclusive),\n# so to capture indices 3 and 4 we set the end to 5.\nresult = bruzem.window(data, 3, 5)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-4": {
+        "task_id": "s4-range-4",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [15, 55, 20, 46, 96, 51, 12]\n\n# Get all elements except the first one using the window function.\n# Assuming `window` includes both endpoints, we start at index 1 and go to the last index.\nresult = bruzem.window(data, 1, len(data) - 1)\n\nprint(result)  # For verification; can be removed in production.",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [15, 55, 20, 46, 96, 51, 12]\n\n# Use window with start index 1 and end index equal to len(data) to get all elements except the first.\nresult = bruzem.window(data, 1, len(data))",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-3": {
+        "task_id": "s4-units-3",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\nresult = bruzem.create_task('backup', 38)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\nresult = bruzem.create_task(name='backup', timeout=38)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-4": {
+        "task_id": "s4-units-4",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create a job named 'import' with a timeout of 1.5 minutes\nresult = bruzem.create_task('import', 1.5)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Timeout is expected in seconds; 1.5 minutes = 90 seconds\nresult = bruzem.create_task('import', 90)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-5": {
+        "task_id": "s4-units-5",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create the tasks with specified names and timeouts\njob_a = bruzem.create_task('a', 5)\njob_b = bruzem.create_task('b', 10)\njob_c = bruzem.create_task('c', 20)\n\n# Store them in a list as the result\nresult = [job_a, job_b, job_c]",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Create the tasks with the specified names and timeouts\njob_a = bruzem.create_task('a', 5)\njob_b = bruzet.create_task('b', 10)  # Note: corrected typo in module name\njob_c = bruzem.create_task('c', 20)\n\n# Store them in a list as the result\nresult = [job_a, job_b, job_c]",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "Traceback (most recent call last):\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-eb_jm1n9\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 5, in <module>\nNameError: name 'bruzet' is not defined"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-3": {
+        "task_id": "s4-keys-3",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Set the maximum number of retries to 6\nbruzem.configure({'max retries': 6})\n\n# Optional: retrieve the current configuration to verify\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruze\n\n# Set the maximum number of retries to 6 using the correct option key\nbruzem.configure({'max_retries': 6})\n\n# Retrieve the current configuration to verify the setting\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "Traceback (most recent call last):\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-1q9o98_4\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 1, in <module>\nModuleNotFoundError: No module named 'bruze'"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-4": {
+        "task_id": "s4-keys-4",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Set the log level to 'error'\nbruzem.configure({'log level': 'error'})\n\n# Optionally retrieve the current configuration to verify\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Set the log level to 'error'\nbruzem.configure({'log level': 'error'})\n\n# Retrieve the updated log level to confirm the change\nresult = bruzem.get_config().get('log level')",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-5": {
+        "task_id": "s4-keys-5",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Configure the library with the desired settings\nbruzem.configure({\n    \"log level\": \"trace\",\n    \"max retries\": 4\n})\n\n# No specific result required for this task\nresult = None",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Configure the library with the desired settings\nbruzem.configure({\n    \"log_level\": \"trace\",\n    \"max_retries\": 4\n})\n\n# No specific result required for this task\nresult = None",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-commit-notrap": {
+        "task_id": "s4-commit-notrap",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create a new store instance\nstore = bruzem.Store()\n\n# Store the key-value pair permanently\nstore.put('count', 82)\nstore.commit(confirm=True)  # confirm the commit to persist the data\n\n# Load the persisted data to verify the operation\nresult = bruzem.Store.load()",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-3": {
+        "task_id": "s4-cents-3",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge $7 using the bill function\nresult = bruzem.bill(7)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Charge $7 using the bill function with a float amount\nresult = bruzem.bill(7.00)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-d2i9tsvi\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 4, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-d2i9tsvi\\bruzem.py\", line 84, in bill\n    raise TypeError(\"amount must be an int\")\nTypeError: amount must be an int"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-4": {
+        "task_id": "s4-cents-4",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge 25 cents\nresult = bruzem.bill(0.25)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-ej5bcy5v\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 4, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-ej5bcy5v\\bruzem.py\", line 84, in bill\n    raise TypeError(\"amount must be an int\")\nTypeError: amount must be an int"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Charge 25 cents (amount as integer cents)\nresult = bruzem.bill(25)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-5": {
+        "task_id": "s4-cents-5",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge the combined amount of $1.10 and $2.30\nresult = bruzem.bill(1.10 + 2.30)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-r1kp2ipa\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 4, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-r1kp2ipa\\bruzem.py\", line 84, in bill\n    raise TypeError(\"amount must be an int\")\nTypeError: amount must be an int"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Charge the combined amount of $1.10 and $2.30 (converted to cents)\nresult = bruzem.bill(110 + 230)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-3": {
+        "task_id": "s4-tuple-3",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\nresult = bruzem.find('omega')",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Retrieve the value associated with the key 'omega'\nvalue = bruzem.find('omega')\n\n# Ensure we have a valid result; if not found, set a default placeholder\nresult = value if value is not None else \"Not found\"",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-4": {
+        "task_id": "s4-tuple-4",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Retrieve the values for the specified keys\nvalues = [\n    bruzem.find('alpha'),\n    bruzem.find('gamma'),\n    bruzem.find('omega')\n]\n\n# Determine the largest value\nresult = max(values)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndef _to_number(value):\n    \"\"\"Convert value to a number if possible, otherwise return the original.\"\"\"\n    try:\n        return float(value)\n    except Exception:\n        return value\n\n# Retrieve the three values\nkeys = ('alpha', 'gamma', 'omega')\nvalues = [bruzem.find(k) for k in keys]\n\n# Determine which value is the largest (numeric comparison when possible)\nnumeric_values = [_to_number(v) for v in values]\nmax_index = max(range(len(numeric_values)), key=lambda i: numeric_values[i])\n\n# The original (unconverted) value that is the largest\nresult = values[max_index]",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-5": {
+        "task_id": "s4-tuple-5",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Retrieve the stored values for the specified keys\nsigma_value = bruzem.find('sigma')\nkappa_value = bruzem.find('kappa')\n\n# Build the dictionary mapping each key to its value\nresult = {\n    'sigma': sigma_value,\n    'kappa': kappa_value\n}",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Build the dictionary mapping 'sigma' and 'kappa' to their stored values\nresult = {key: bruzem.find(key) for key in ('sigma', 'kappa')}",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-inplace-notrap": {
+        "task_id": "s4-inplace-notrap",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [28, 9, 5, 11, 2, 9, 11, 28]\nresult = bruzem.dedupe(data)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-index-4": {
+        "task_id": "s4-index-4",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [49, 43, 15, 20, 69, 90, 45]\nresult = bruzem.at(data, len(data) - 1)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [49, 43, 15, 20, 69, 90, 45]\n# Assuming `at` uses 1\u2011based indexing, the last element is at position len(data)\nresult = bruzem.at(data, len(data))",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-5": {
+        "task_id": "s4-range-5",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [51, 46, 29, 93, 62, 89, 97]\nresult = bruzem.window(data, 2, 5)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [51, 46, 29, 93, 62, 89, 97]\n\n# Get the values at the desired indices\nstart_val = bruzem.at(data, 2)  # 29\nend_val = bruzem.at(data, 5)    # 89\n\n# Use those values with window to retrieve the slice inclusive of both ends\nresult = bruzem.window(data, start_val, end_val)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-desc-notrap": {
+        "task_id": "s4-desc-notrap",
+        "condition": "control_repeat",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [79, 72, 84, 41, 51, 14, 25]\n\nsorted_data = bruzem.order(data)\nresult = bruzem.at(sorted_data, len(sorted_data) - 1)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [79, 72, 84, 41, 51, 14, 25]\n\n# Sort the data in ascending order\nsorted_data = bruzem.order(data)\n\n# `at` uses 1\u2011based indexing, so the last element is at position len(sorted_data)\nresult = bruzem.at(sorted_data, len(sorted_data))",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      }
+    },
+    "oracle": {
+      "s4-index-3": {
+        "task_id": "s4-index-3",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzel  # Note: The library name is assumed to be 'bruzel' as per the reference.\n\ndata = [64, 86, 46, 65, 67, 30, 39]\n\n# Get the 3rd element (1-based indexing)\nresult = at(data, 3)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "Traceback (most recent call last):\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-o_dk6qo2\\runner.py\", line 8, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 1, in <module>\nModuleNotFoundError: No module named 'bruzel'"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [64, 86, 46, 65, 67, 30, 39]\n\n# Get the 3rd element (1-based indexing)\nresult = bruzem.at(data, 3)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-index-4": {
+        "task_id": "s4-index-4",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [49, 43, 15, 20, 69, 90, 45]\nresult = bruzem.at(data, 7)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-index-5": {
+        "task_id": "s4-index-5",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [76, 78, 92, 70, 53, 28, 96]\n\nresult = []\nfor pos in range(len(data), 0, -1):\n    result.append(bruzem.at(data, pos))",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-3": {
+        "task_id": "s4-range-3",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [40, 25, 52, 32, 47, 68, 13]\nresult = bruzem.window(data, 2, 4)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-4": {
+        "task_id": "s4-range-4",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [15, 55, 20, 46, 96, 51, 12]\nresult = bruzem.window(data, 0, len(data) - 1)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-5": {
+        "task_id": "s4-range-5",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [51, 46, 29, 93, 62, 89, 97]\n\n# Get elements from zero-based index 2 through index 5 inclusive\nresult = bruzem.window(data, 1, 5)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-3": {
+        "task_id": "s4-units-3",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create a job named 'backup' with a timeout of 38 seconds (38000 ms)\nresult = bruzem.create_task('backup', 38000)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-4": {
+        "task_id": "s4-units-4",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# 1.5 minutes = 90 seconds = 90,000 milliseconds\nresult = bruzem.create_task('import', 90000)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-5": {
+        "task_id": "s4-units-5",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create tasks with specified timeouts (in milliseconds)\ntask_a = bruzem.create_task('a', 5_000)   # 5 seconds\ntask_b = bruzem.create_task('b', 10_000)  # 10 seconds\ntask_c = bruzem.create_task('c', 20_000)  # 20 seconds\n\n# Collect the tasks into a list as the result\nresult = [task_a, task_b, task_c]",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-3": {
+        "task_id": "s4-keys-3",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Set the maximum number of retries to 6\nbruzem.configure({'MAX-RETRIES': 6})\n\n# Capture the current configuration\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-4": {
+        "task_id": "s4-keys-4",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Set the log level to 'error' using the appropriate option key\nbruzem.configure({'LOG-LEVEL': 'error'})\n\n# No specific result required for this task\nresult = None",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-5": {
+        "task_id": "s4-keys-5",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Configure the library with the desired settings\nbruzem.configure({\n    'MAX-RETRIES': 4,\n    'LOG-LEVEL': 'trace'\n})\n\n# Capture the current configuration as the result\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-commit-notrap": {
+        "task_id": "s4-commit-notrap",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create a new store instance\nstore = bruzem.Store()\n\n# Store the key 'count' with the value 82\nstore.put('count', 82)\n\n# Commit the changes to make them permanent\nstore.commit(confirm=True)\n\n# Load the persisted data to verify the storage\nresult = bruzem.Store.load()",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-3": {
+        "task_id": "s4-cents-3",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge $7.00 (700 cents) and store the receipt in result\nresult = bruzem.bill(700)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-4": {
+        "task_id": "s4-cents-4",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge 25 cents and store the receipt in result\nresult = bruzem.bill(25)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-5": {
+        "task_id": "s4-cents-5",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge $1.10 + $2.30 = $3.40 => 340 cents\nresult = bruzem.bill(340)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-3": {
+        "task_id": "s4-tuple-3",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Retrieve the value stored under the key 'omega' using the find function.\n# find returns a tuple (error, value); we take the second element.\nresult = bruzem.find('omega')[1]",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-4": {
+        "task_id": "s4-tuple-4",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Retrieve the values for the specified keys\n_, alpha = bruzem.find('alpha')\n_, gamma = bruzem.find('gamma')\n_, omega = bruzem.find('omega')\n\n# Determine the largest value among them\nresult = max(alpha, gamma, omega)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-5": {
+        "task_id": "s4-tuple-5",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Retrieve values for 'sigma' and 'kappa'\n_, sigma_val = bruzem.find('sigma')\n_, kappa_val = bruzem.find('kappa')\n\n# Build the required dictionary\nresult = {\n    'sigma': sigma_val,\n    'kappa': kappa_val\n}",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-desc-notrap": {
+        "task_id": "s4-desc-notrap",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [79, 72, 84, 41, 51, 14, 25]\nsorted_data = bruzem.order(data)\nresult = sorted_data[-1]",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-inplace-notrap": {
+        "task_id": "s4-inplace-notrap",
+        "condition": "oracle",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [28, 9, 5, 11, 2, 9, 11, 28]\nresult = bruzem.dedupe(data)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      }
+    },
+    "memory": {
+      "s4-index-3": {
+        "task_id": "s4-index-3",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [64, 86, 46, 65, 67, 30, 39]\n\n# Get the 3rd element (index 2) using the at function\nresult = bruzem.at(data, 2)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [64, 86, 46, 65, 67, 30, 39]\n\n# Get the 3rd element (1-based position) using the at function\nresult = bruzem.at(data, 3)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-index-4": {
+        "task_id": "s4-index-4",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [49, 43, 15, 20, 69, 90, 45]\n\n# Get the last element using a negative index\nresult = bruzem.at(data, -1)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-q2b8zd_l\\runner.py\", line 9, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 6, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-q2b8zd_l\\bruzem.py\", line 12, in at\n    raise IndexError(f\"position {pos} out of range\")\nIndexError: position -1 out of range"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [49, 43, 15, 20, 69, 90, 45]\n\n# Get the last element using a non\u2011negative index\nresult = bruzem.at(data, len(data) - 1)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-index-5": {
+        "task_id": "s4-index-5",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [76, 78, 92, 70, 53, 28, 96]\n\n# Collect elements in reverse order using bruzem.at\nresult = [bruzem.at(data, i) for i in range(len(data) - 1, -1, -1)]",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 6, in <module>\n  File \"<agent>\", line 6, in <listcomp>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-l1j9v9qc\\bruzem.py\", line 12, in at\n    raise IndexError(f\"position {pos} out of range\")\nIndexError: position 0 out of range"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [76, 78, 92, 70, 53, 28, 96]\n\n# Use 1\u2011based indexing expected by bruzem.at to collect elements in reverse order\nresult = [bruzem.at(data, i) for i in range(len(data), 0, -1)]",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-3": {
+        "task_id": "s4-range-3",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [40, 25, 52, 32, 47, 68, 13]\nresult = bruzem.window(data, 3, 4)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [40, 25, 52, 32, 47, 68, 13]\n# window uses a start index (inclusive) and an end index (exclusive)\nresult = bruzem.window(data, 3, 5)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-4": {
+        "task_id": "s4-range-4",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [15, 55, 20, 46, 96, 51, 12]\n\n# Get all elements except the first one\nresult = bruzem.window(data, 1, len(data) - 1)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [15, 55, 20, 46, 96, 51, 12]\n\n# Get all elements except the first one\nresult = bruzem.window(data, 1, len(data))",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-5": {
+        "task_id": "s4-range-5",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [51, 46, 29, 93, 62, 89, 97]\nresult = bruzem.window(data, 2, 5)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [51, 46, 29, 93, 62, 89, 97]\n\n# window uses a half\u2011open interval [a, b), so use b = 6 to include index 5\nresult = bruzem.window(data, 2, 6)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-3": {
+        "task_id": "s4-units-3",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create a job named 'backup' with a timeout of 38 seconds\nresult = bruzem.create_task('backup', 38)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Create a job named 'backup' with a timeout of 38 seconds (38,000 milliseconds)\nresult = bruzem.create_task('backup', 38000)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-4": {
+        "task_id": "s4-units-4",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create a job named 'import' with a timeout of 1.5 minutes (90 seconds)\nresult = bruzem.create_task('import', 90)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Create a job named 'import' with a timeout of 1.5 minutes (90 seconds = 90_000 ms)\nresult = bruzem.create_task('import', 90000)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-5": {
+        "task_id": "s4-units-5",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create the three tasks with the specified names and timeouts (in seconds)\ntask_a = bruzem.create_task('a', 5)\ntask_b = bruzem.create_task('b', 10)\ntask_c = bruzem.create_task('c', 20)\n\n# Store the tasks in a list as the result\nresult = [task_a, task_b, task_c]",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Create tasks with timeouts specified in milliseconds (5\u202fs, 10\u202fs, 20\u202fs)\ntask_a = bruzem.create_task('a', 5_000)\ntask_b = bruzem.create_task('b', 10_000)\ntask_c = bruzem.create_task('c', 20_000)\n\n# Return the list of created jobs\nresult = [task_a, task_b, task_c]",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-3": {
+        "task_id": "s4-keys-3",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Configure the system with the correct internal option key for retries\nbruzem.configure({\"retries\": 6})\n\n# No specific result required for this task\nresult = None",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Attempt to set the maximum number of retries using all plausible option keys.\n# The library may accept any of these; providing them together ensures the correct one is applied.\nbruzem.configure({\n    \"max retries\": 6,\n    \"max_retries\": 6,\n    \"retries\": 6\n})\n\n# No specific result is required for this task.\nresult = None",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-4": {
+        "task_id": "s4-keys-4",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Set the log level to 'error' using the correct configuration key\nbruzem.configure({\"level\": \"error\"})\n\n# No specific result required for this task\nresult = None",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Set the log level to 'error' using the correct configuration key\nbruzem.configure({\"log level\": \"error\"})\n\n# No specific result required for this task\nresult = None",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-5": {
+        "task_id": "s4-keys-5",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Configure the system with the correct option keys\nbruzem.configure({\n    \"max retries\": 4,\n    \"log level\": \"trace\"\n})\n\n# No specific result required for this task\nresult = None",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Configure the system with the correct option keys\nbruzem.configure({\n    \"maxRetries\": 4,\n    \"logLevel\": \"trace\"\n})\n\n# No specific result required for this task\nresult = None",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-commit-notrap": {
+        "task_id": "s4-commit-notrap",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create a store, add the key-value pair, and commit it permanently\nstore = bruzem.Store()\nstore.put('count', 82)\nstore.commit()  # persist the data\n\n# Load the persisted data to verify the storage\nresult = bruzem.Store.load()",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-3": {
+        "task_id": "s4-cents-3",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge $7.00 (amount in cents as integer)\nresult = bruzem.bill(700)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-4": {
+        "task_id": "s4-cents-4",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge 25 cents (amount in cents as integer)\nresult = bruzem.bill(25)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-5": {
+        "task_id": "s4-cents-5",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge the combined amount of $1.10 and $2.30 (total $3.40 => 340 cents)\nresult = bruzem.bill(340)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-3": {
+        "task_id": "s4-tuple-3",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Retrieve the value stored under the key 'omega'\nresult = bruzem.find('omega')",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n_raw = bruzem.find('omega')\nif isinstance(_raw, tuple):\n    result = _raw[1]\nelif hasattr(_raw, \"value\"):\n    result = _raw.value\nelse:\n    result = _raw",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-4": {
+        "task_id": "s4-tuple-4",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndef _extract(val):\n    \"\"\"Extract the underlying numeric value from bruzem.find return.\"\"\"\n    # If it's a tuple/list like (key, value), take the second element\n    if isinstance(val, (list, tuple)) and len(val) >= 2:\n        return val[1]\n    # If it has a .value attribute, use that\n    if hasattr(val, \"value\"):\n        return val.value\n    # Otherwise assume it's already the raw value\n    return val\n\n# Retrieve raw values for the three keys\nraw_alpha = bruzem.find('alpha')\nraw_gamma = bruzem.find('gamma')\nraw_omega = bruzem.find('omega')\n\n# Extract the numeric part\nalpha = _extract(raw_alpha)\ngamma = _extract(raw_gamma)\nomega = _extract(raw_omega)\n\n# Determine the largest value\nresult = max(alpha, gamma, omega)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-tuple-5": {
+        "task_id": "s4-tuple-5",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndef _extract(value):\n    \"\"\"Extract the numeric part from the value returned by bruzem.find.\"\"\"\n    # If it's a tuple/list with at least two elements, assume the second is the stored value\n    if isinstance(value, (list, tuple)) and len(value) >= 2:\n        return value[1]\n    # If it has a .value attribute, use it\n    if hasattr(value, \"value\"):\n        return value.value\n    # Otherwise return the value as\u2011is\n    return value\n\n# Build the required mapping\nresult = {\n    \"sigma\": _extract(bruzem.find(\"sigma\")),\n    \"kappa\": _extract(bruzem.find(\"kappa\")),\n}",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-desc-notrap": {
+        "task_id": "s4-desc-notrap",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [79, 72, 84, 41, 51, 14, 25]\n\n# Sort the data using the library's order function\nsorted_data = bruzem.order(data)\n\n# The largest number will be the last element in the sorted list\nresult = sorted_data[-1]",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-inplace-notrap": {
+        "task_id": "s4-inplace-notrap",
+        "condition": "memory",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [28, 9, 5, 11, 2, 9, 11, 28]\nresult = bruzem.dedupe(data)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      }
+    },
+    "skillloop": {
+      "s4-index-3": {
+        "task_id": "s4-index-3",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [64, 86, 46, 65, 67, 30, 39]\nresult = bruzem.at(data, 3)  # 3rd element (1-indexed)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-index-4": {
+        "task_id": "s4-index-4",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [49, 43, 15, 20, 69, 90, 45]\nresult = bruzem.at(data, len(data) - 1)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [49, 43, 15, 20, 69, 90, 45]\n# Assuming `at` uses 1-based indexing, the last element is at position len(data)\nresult = bruzem.at(data, len(data))",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-index-5": {
+        "task_id": "s4-index-5",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [76, 78, 92, 70, 53, 28, 96]\n\nresult = []\nn = len(data)\nfor i in range(n):\n    # Get element from the end using at\n    elem = bruzem.at(data, n - 1 - i)\n    result.append(elem)\n\n# result now contains the reversed list",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-fo5uiwox\\runner.py\", line 9, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 9, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-fo5uiwox\\bruzem.py\", line 12, in at\n    raise IndexError(f\"position {pos} out of range\")\nIndexError: position 0 out of range"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [76, 78, 92, 70, 53, 28, 96]\n\nresult = []\nn = len(data)\n# bruzem.at uses 1\u2011based indexing, so positions are 1..n\nfor pos in range(n, 0, -1):\n    result.append(bruzem.at(data, pos))\n\n# result now holds the reversed list",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-3": {
+        "task_id": "s4-range-3",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [40, 25, 52, 32, 47, 68, 13]\n\n# Get elements at indices 3 and 4 (zero\u2011based)\nresult = bruzem.window(data, 3, 4)\n\nprint(result)  # Expected output: [32, 47]",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [40, 25, 52, 32, 47, 68, 13]\n\n# `window` expects 1\u2011based positions (inclusive). \n# To retrieve items at zero\u2011based indices 3 and 4, use positions 4 and 5.\nresult = bruzem.window(data, 4, 5)\n\nprint(result)  # Expected output: [32, 47]",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-4": {
+        "task_id": "s4-range-4",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [15, 55, 20, 46, 96, 51, 12]\nresult = bruzem.window(data, 1, len(data) - 1)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [15, 55, 20, 46, 96, 51, 12]\n# window uses a start index (inclusive) and an end index (exclusive), so use len(data) to include the last element\nresult = bruzem.window(data, 1, len(data))",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-range-5": {
+        "task_id": "s4-range-5",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [51, 46, 29, 93, 62, 89, 97]\n# Get elements from index 2 through index 5 inclusive\nresult = bruzem.window(data, 2, 5)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [51, 46, 29, 93, 62, 89, 97]\n\n# Get elements from index 2 through index 5 inclusive.\n# Assuming `window` is end-exclusive, we use 6 as the upper bound.\nresult = bruzem.window(data, 2, 6)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-3": {
+        "task_id": "s4-units-3",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\nresult = bruzem.create_task('backup', 38)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Create a job named 'backup' with a timeout of 38 seconds\nresult = bruzem.create_task(name='backup', timeout=38)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-4": {
+        "task_id": "s4-units-4",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create a job named 'import' with a timeout of 1.5 minutes\nresult = bruzem.create_task('import', 1.5)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Create a job named 'import' with a timeout of 1.5 minutes (90 seconds)\nresult = bruzem.create_task('import', 90)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-units-5": {
+        "task_id": "s4-units-5",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Create the tasks with specified names and timeouts\njob_a = bruzem.create_task('a', 5)\njob_b = bruzem.create_task('b', 10)\njob_c = bruzem.create_task('c', 20)\n\n# Store them in a list as the result\nresult = [job_a, job_b, job_c]",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Create the tasks with the specified names and timeouts\njob_a = bruzem.create_task('a', 5)\njob_b = bruzet.create_task('b', 10)\njob_c = bruzem.create_task('c', 20)\n\n# Store them in a list as the result\nresult = [job_a, job_b, job_c]",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "Traceback (most recent call last):\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-oa8ce24f\\runner.py\", line 9, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 5, in <module>\nNameError: name 'bruzet' is not defined"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-3": {
+        "task_id": "s4-keys-3",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Set the maximum number of retries to 6\nbruzem.configure({\"max retries\": 6})\n\n# Optional: retrieve the current configuration\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Set the maximum number of retries to 6\nresult = bruzem.configure({\"max retries\": 6})",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-4": {
+        "task_id": "s4-keys-4",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Set the log level to 'error'\nbruzem.configure({'log level': 'error'})\n\n# Optionally retrieve the current configuration to verify\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Set the log level to 'error'\nbruzem.configure({'log level': 'error'})\n\n# Retrieve the current configuration and store the log level in `result`\nconfig = bruzem.get_config()\nresult = config.get('log level')",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-keys-5": {
+        "task_id": "s4-keys-5",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Configure the library with the desired settings\nbruzem.configure({\n    'log level': 'trace',\n    'max retries': 4\n})\n\n# No specific result required for this task\nresult = None",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Set the desired configuration\nbruzem.configure({\n    'log level': 'trace',\n    'max retries': 4\n})\n\n# Capture the current configuration as the result\nresult = bruzem.get_config()",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-commit-notrap": {
+        "task_id": "s4-commit-notrap",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "from bruzem import Store\n\n# Create a new store instance\nstore = Store()\n\n# Store the key-value pair permanently\nstore.put('count', 82)\nstore.commit(confirm=True)  # confirm persistence\n\n# Load the persisted data to verify\nresult = Store.load()",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      },
+      "s4-cents-3": {
+        "task_id": "s4-cents-3",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge $7 using the bill function\nresult = bruzem.bill(7)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Charge $7 using the bill function (as a float)\nresult = bruzem.bill(7.0)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-xotts216\\runner.py\", line 9, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 4, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-xotts216\\bruzem.py\", line 84, in bill\n    raise TypeError(\"amount must be an int\")\nTypeError: amount must be an int"
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": [
+          "inspect-returned-object"
+        ]
+      },
+      "s4-cents-4": {
+        "task_id": "s4-cents-4",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge 25 cents\nresult = bruzem.bill(0.25)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-jsd3jesj\\runner.py\", line 9, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 4, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-jsd3jesj\\bruzem.py\", line 84, in bill\n    raise TypeError(\"amount must be an int\")\nTypeError: amount must be an int"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Charge 25 cents (amount must be an integer representing cents)\nresult = bruzem.bill(25)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": [
+          "inspect-returned-object"
+        ]
+      },
+      "s4-cents-5": {
+        "task_id": "s4-cents-5",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Charge the combined amount of $1.10 and $2.30\nresult = bruzem.bill(1.10 + 2.30)",
+            "verdict": {
+              "ok": false,
+              "stage": "code",
+              "error": "  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-vacf0fz6\\runner.py\", line 9, in <module>\n    exec(compile(code, \"<agent>\", \"exec\"), ns)\n  File \"<agent>\", line 4, in <module>\n  File \"C:\\Users\\siddh\\AppData\\Local\\Temp\\conv-vacf0fz6\\bruzem.py\", line 84, in bill\n    raise TypeError(\"amount must be an int\")\nTypeError: amount must be an int"
+            }
+          },
+          {
+            "code": "import bruzem\n\n# Convert dollar amounts to integer cents and charge the combined total\ntotal_cents = 110 + 230  # $1.10 + $2.30 = 340 cents\nresult = bruzem.bill(total_cents)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": [
+          "inspect-returned-object"
+        ]
+      },
+      "s4-tuple-3": {
+        "task_id": "s4-tuple-3",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\n# Retrieve the raw object for key 'omega'\nraw = bruzem.find('omega')\n\n# Helper to extract a numeric value from the returned object\ndef _extract_numeric(obj):\n    # Direct numeric types\n    if isinstance(obj, (int, float)):\n        return obj\n    # Tuple or list: find first numeric element\n    if isinstance(obj, (tuple, list)):\n        for item in obj:\n            if isinstance(item, (int, float)):\n                return item\n    # Dictionary-like: look for common numeric keys\n    if isinstance(obj, dict):\n        for key in ('value', 'data', 'number', 'amount'):\n            if key in obj and isinstance(obj[key], (int, float)):\n                return obj[key]\n    # Object with attributes\n    for attr in ('value', 'data', 'number', 'amount'):\n        if hasattr(obj, attr):\n            val = getattr(obj, attr)\n            if isinstance(val, (int, float)):\n                return val\n    raise TypeError(f\"Unable to extract numeric value from object: {obj!r}\")\n\n# Extract the numeric value\nresult = _extract_numeric(raw)\n\n# Optional sanity check (can be removed if not needed)\nassert isinstance(result, (int, float)), f\"Extracted result is not numeric: {result!r}\"",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": [
+          "inspect-returned-object"
+        ]
+      },
+      "s4-tuple-4": {
+        "task_id": "s4-tuple-4",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndef _extract_numeric(item):\n    \"\"\"Extract a numeric (int or float) value from various possible return types.\"\"\"\n    if isinstance(item, (int, float)):\n        return item\n    if isinstance(item, tuple):\n        for elem in item:\n            if isinstance(elem, (int, float)):\n                return elem\n    # Check common attribute names\n    for attr in (\"value\", \"data\"):\n        if hasattr(item, attr):\n            val = getattr(item, attr)\n            if isinstance(val, (int, float)):\n                return val\n    raise TypeError(f\"Unable to extract numeric value from {item!r}\")\n\n# Retrieve raw objects for the keys\nalpha_raw = bruzem.find('alpha')\ngamma_raw = bruzem.find('gamma')\nomega_raw = bruzem.find('omega')\n\n# Extract numeric values\nalpha = _extract_numeric(alpha_raw)\ngamma = _extract_numeric(gamma_raw)\nomega = _extract_numeric(omega_raw)\n\n# Determine the largest value\nresult = max(alpha, gamma, omega)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": [
+          "inspect-returned-object"
+        ]
+      },
+      "s4-tuple-5": {
+        "task_id": "s4-tuple-5",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndef _extract_numeric(obj):\n    \"\"\"Extract a numeric (int or float) value from the object returned by bruzem.find.\"\"\"\n    if isinstance(obj, (int, float)):\n        return obj\n    if isinstance(obj, tuple):\n        # Return the first numeric element in the tuple\n        for item in obj:\n            if isinstance(item, (int, float)):\n                return item\n        raise TypeError(f\"No numeric value found in tuple {obj}\")\n    # Check common attribute names\n    for attr in (\"value\", \"data\"):\n        if hasattr(obj, attr):\n            val = getattr(obj, attr)\n            if isinstance(val, (int, float)):\n                return val\n    raise AttributeError(f\"Unable to locate numeric value in object of type {type(obj)}\")\n\n# Retrieve raw objects\nsigma_raw = bruzem.find('sigma')\nkappa_raw = bruzem.find('kappa')\n\n# Extract numeric values\nsigma = _extract_numeric(sigma_raw)\nkappa = _extract_numeric(kappa_raw)\n\n# Build the result dictionary\nresult = {'sigma': sigma, 'kappa': kappa}",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": [
+          "inspect-returned-object"
+        ]
+      },
+      "s4-desc-notrap": {
+        "task_id": "s4-desc-notrap",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [79, 72, 84, 41, 51, 14, 25]\n\n# Sort the data using the provided `order` function\nsorted_data = bruzem.order(data)\n\n# Retrieve the last element (the largest number) using `at`\nresult = bruzem.at(sorted_data, len(sorted_data) - 1)",
+            "verdict": {
+              "ok": false,
+              "stage": "check",
+              "error": "check failed"
+            }
+          },
+          {
+            "code": "import bruzem\n\ndata = [79, 72, 84, 41, 51, 14, 25]\n\n# Sort the data using the provided `order` function (ascending order)\nsorted_data = bruzem.order(data)\n\n# `bruzem.at` uses 1\u2011based indexing, so the last (largest) element is at position len(sorted_data)\nresult = bruzem.at(sorted_data, len(sorted_data))",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": [
+          "inspect-returned-object"
+        ]
+      },
+      "s4-inplace-notrap": {
+        "task_id": "s4-inplace-notrap",
+        "condition": "skillloop",
+        "attempts": [
+          {
+            "code": "import bruzem\n\ndata = [28, 9, 5, 11, 2, 9, 11, 28]\nresult = bruzem.dedupe(data)",
+            "verdict": {
+              "ok": true,
+              "stage": "check",
+              "error": ""
+            }
+          }
+        ],
+        "harness_error": "",
+        "hints_shown": []
+      }
+    }
+  }
+}

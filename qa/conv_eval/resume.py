@@ -86,7 +86,10 @@ def main(seed: int, state: Path = STATE):
         skills = {s.name: s.status for s in loop.store.all_skills()}
         print("skills learned:", skills, flush=True)
         r["skillloop"] = Cache(d / "skillloop.jsonl").run(test, lambda t: skillloop_episode(agent, loop, suite, t))
-        if any(len(r[c]) < len(test) for c in ("memory", "skillloop")):
+        # COMBINED: the skill library AND the raw past attempts, which seed 2 suggested are complementary
+        r["combined"] = Cache(d / "combined.jsonl").run(
+            test, lambda t: skillloop_episode(agent, loop, suite, t, "combined", memory_context(records)))
+        if any(len(r[c]) < len(test) for c in ("memory", "skillloop", "combined")):
             print("INCOMPLETE test phase; re-run to resume."); return None
         rep["per_seed"][seed].update({"skills": skills, "train_success": sum(e.success for e in train.values())})
         notrap = [t.id for t in test if not t.trap]
@@ -95,13 +98,15 @@ def main(seed: int, state: Path = STATE):
         rep["harm_notrap"] = {k: rate(v, notrap) for k, v in r.items()}
         rep["paired"] = {"skillloop_vs_control": paired(r["skillloop"], r["control"], trap),
                          "skillloop_vs_memory": paired(r["skillloop"], r["memory"], trap),
-                         "memory_vs_control": paired(r["memory"], r["control"], trap)}
+                         "memory_vs_control": paired(r["memory"], r["control"], trap),
+                         "combined_vs_memory": paired(r["combined"], r["memory"], trap),
+                         "combined_vs_skillloop": paired(r["combined"], r["skillloop"], trap)}
         rep["verdict"] = verdict(rep)
     else:
         rep["verdict"] = "gate failed; seed excluded"
     rep["episodes"] = {k: {i: vars(e) for i, e in v.items()} for k, v in r.items()} if g["pass"] else {}
     OUT.mkdir(exist_ok=True)
-    (OUT / f"full-seed{seed}.json").write_text(json.dumps(rep, indent=2, default=str))
+    (OUT / f"full-seed{seed}.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
     print_report(rep)
     print("DONE", flush=True)
     return rep

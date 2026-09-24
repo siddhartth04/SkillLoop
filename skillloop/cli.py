@@ -41,7 +41,7 @@ def main(argv=None):
     if a.cmd == "recall":
         out = loop.recall(a.task, a.limit)
     elif a.cmd == "learn":
-        raw = sys.stdin.read() if a.file == "-" else open(a.file).read()
+        raw = sys.stdin.read() if a.file == "-" else open(a.file, encoding="utf-8").read()
         out = loop.learn(json.loads(raw))
     elif a.cmd == "process":
         out = loop.process()

@@ -240,3 +240,22 @@ def test_gate_refuses_to_promote_a_skill_that_fails_its_rerun(loop):
 
     loop.run_pending_evals(failing_runner)
     assert learned(loop)["verify-pip-install"] != "active", "a failing re-run must never reach active"
+
+
+def test_a_skill_containing_non_ascii_survives_a_save_and_reload(loop):
+    """Models write en dashes, smart quotes and non-breaking hyphens. Skills must not be lost to them.
+
+    Seed 4 of the conventions eval lost five of six learned skills to UnicodeEncodeError: SKILL.md was
+    written with the platform default encoding, which on Windows is cp1252, and a single U+2011 in the
+    model's output destroyed the skill. The run looked like the verification gate rejecting them, which is
+    the kind of mistake that quietly invalidates an evaluation.
+    """
+    tricky = "non‑breaking — dash, “smart quotes”, check ✓, café"
+    sk = _skill("unicode-safe-skill", ["a symptom with — in it"])
+    sk.description = tricky
+    loop.store.save_skill(sk, snapshot=True)
+
+    back = loop.store.get_skill("unicode-safe-skill")
+    assert back is not None, "a skill with non-ASCII text must survive the round trip"
+    assert back.description == tricky
+    assert (loop.store.skills_dir / "unicode-safe-skill" / "SKILL.md").exists()

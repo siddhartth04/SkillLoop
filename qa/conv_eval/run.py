@@ -274,7 +274,7 @@ def full(seeds: list[int]):
         report["verdict"] = verdict(report)
     report["episodes"] = {k: {i: vars(e) for i, e in v.items()} for k, v in allc.items()}
     path = OUT / f"full-{int(time.time())}.json"
-    path.write_text(json.dumps(report, indent=2, default=str))
+    path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     print_report(report)
     print(f"\nfull record: {path}")
     return report

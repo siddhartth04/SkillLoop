@@ -226,7 +226,7 @@ class LLM:
         key = hashlib.sha1(f"{role}|{system[:200]}|{user}".encode()).hexdigest()[:12]
         ans = self.manual_dir / f"{key}.answer.json"
         if ans.exists():
-            text = ans.read_text()
+            text = ans.read_text(encoding="utf-8")
             problem = _validate_manual(text, role)
             if problem:
                 # fail loudly at the file, not four steps later inside the pipeline with an AttributeError
@@ -234,7 +234,8 @@ class LLM:
             return text
         req = self.manual_dir / f"{key}.request.json"
         if not req.exists():
-            req.write_text(json.dumps({"id": key, "role": role, "system": system, "user": user}, indent=1))
+            req.write_text(json.dumps({"id": key, "role": role, "system": system, "user": user}, indent=1),
+                           encoding="utf-8")
         raise PendingManualCall(key, role or "?", str(req))
 
     # a deterministic stand-in so tests run without keys
