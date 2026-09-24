@@ -176,6 +176,12 @@ unit errors where memory scored 0/3; memory 3/3 on return-shape errors where Ski
 points at combining them rather than choosing. And 7 of SkillLoop's 11 wins came on the **second** attempt —
 error-time recall, not task-start recall, is doing the work.
 
+One caveat that run exposed, and which is now fixed: the eval stopped at `process()`, so all seven learned
+skills stayed `candidate` and the verification gate — the project's central claim — was never exercised. The
+agent was consuming skills that had passed only a model's judgement. Both runners now re-run each new skill's
+own task, graded by the hidden checker, before it can reach `active`; and a skill that is still a candidate
+now says so in the agent's prompt rather than reading like established fact.
+
 Everything is in [`qa/conv_eval/RESULTS.md`](qa/conv_eval/RESULTS.md): every episode, every learned skill, and
 the failures. Validate the harness without a model or an API key:
 
