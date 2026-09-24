@@ -42,6 +42,44 @@ memory, so its extra machinery is not yet justified.
 | tuple | 0/3 | 3/3 | 1/3 |
 | units | 0/3 | 0/3 | 3/3 |
 
+## Why it came out this way
+
+The headline ("not better than simple memory") is true but hides the mechanism. Splitting the same 18 tasks
+by **what the training feedback actually revealed** separates them cleanly:
+
+| Training feedback | n | control | memory | SkillLoop |
+|---|---|---|---|---|
+| A traceback naming the problem | 9 | 3/9 | **9/9** | 6/9 |
+| Only "check failed" | 9 | 0/9 | 1/9 | **5/9** |
+
+Where a training attempt crashed, the learner saw a traceback and the fix is in the recorded code, so raw past
+attempts are very hard to beat — memory scored 9/9. Where an attempt merely failed its check, the learner was
+told "check failed" and nothing more: **the correct value was never shown to it.** Every recorded attempt is
+wrong, so copying them cannot help, and memory collapses to 1/9. That is the case a learned skill exists for,
+and there SkillLoop wins 4–0 head-to-head (p = 0.125, n = 9 — directional, not significant).
+
+Two skills from this run show the whole mechanism:
+
+- **units (3/3, memory 0/3)** — the traces never revealed that timeouts are milliseconds, so the skill wrote a
+  procedure to *find out*: `probe = new_job('sync', 1)`, read `probe._eff()`, compare, then convert. Correct
+  for every timeout value, not just the ones seen.
+- **keys (0/3)** — the traces never revealed that option keys are `UPPER-KEBAB-CASE`, and the skill **guessed**:
+  "use `'retries'`". The real key is `'MAX-RETRIES'`. The agent followed the skill and lost all three attempts,
+  even though the documented `read_config()` returns `{'MAX-RETRIES': 0, 'LOG-LEVEL': 'info'}` and would have
+  answered it immediately.
+
+Same pipeline, opposite outcomes: one encoded a way to discover the unknown, the other asserted it. The
+synthesis prompt forbade inventing commands and paths but said nothing about inventing **the unknown value at
+the centre of the lesson**, which is exactly the thing the evidence usually fails to establish. It now carries
+an UNKNOWN VALUES rule: when the evidence does not fix the value, write the procedure that discovers it.
+
+**That change is untested against a real model** — it was written after this run and needs a fresh seed to
+confirm. Reproduce this analysis on any committed result with:
+
+```bash
+python -m qa.conv_eval.analyze
+```
+
 ## Observations
 
 - 7 of SkillLoop's 11 successes came on the second attempt: error-time recall does much of the work. On the first

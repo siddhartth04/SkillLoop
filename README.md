@@ -3,7 +3,7 @@
 <img src="assets/skillloop-banner.png" alt="SkillLoop — procedural memory for LLM agents that learns skills from failure and gates them on a verification test" width="720"/>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/tests-104%20passing-18181b?style=for-the-badge" alt="tests"/>
+  <img src="https://img.shields.io/badge/tests-106%20passing-18181b?style=for-the-badge" alt="tests"/>
   <img src="https://img.shields.io/badge/python-3.10%2B-6366f1?style=for-the-badge" alt="python"/>
   <img src="https://img.shields.io/badge/license-MIT-8b5cf6?style=for-the-badge" alt="license"/>
   <a href="CALIBRATION.md"><img src="https://img.shields.io/badge/evidence-pre--registered-a855f7?style=for-the-badge" alt="evidence"/></a>
@@ -170,6 +170,27 @@ metrics, statistical test and the exact verdict wording. Model: `openai/gpt-oss-
 That is the pre-registered verdict, reported as written: *"SkillLoop helps, but its extra machinery is not yet
 justified over simple memory."* Three of four seeds were **excluded by their own gates** before SkillLoop ran
 on them, leaving n = 18 — one seed. This is a single-seed result, not a settled one.
+
+**Why it came out that way** matters more than the score. Splitting the same 18 tasks by what the *training
+feedback* revealed separates them cleanly:
+
+| Training feedback | n | control | memory | SkillLoop |
+|:--|:--:|:--:|:--:|:--:|
+| A traceback naming the problem | 9 | 3/9 | **9/9** | 6/9 |
+| Only "check failed" | 9 | 0/9 | 1/9 | **5/9** |
+
+When a training attempt crashed, the fix is sitting in the recorded code and raw past attempts are very hard
+to beat. When it merely failed its check, the learner was told "check failed" and nothing else — **the correct
+value was never shown to it**, every recorded attempt is wrong, and copying them cannot help. That is the case
+a learned skill exists for, and there it wins 4–0 head-to-head (p = 0.125, n = 9 — directional, not
+significant). Reproduce with `python -m qa.conv_eval.analyze`.
+
+The clearest pair, from the same run: the *units* skill could not know timeouts were milliseconds, so it wrote
+a procedure to **find out** — probe the API, measure, convert — and scored 3/3 where memory scored 0/3. The
+*config-keys* skill could not know the keys were `UPPER-KEBAB-CASE`, and **guessed** `'retries'`; the real key
+was `'MAX-RETRIES'`, and it scored 0/3 — although the documented `read_config()` would have answered it in one
+call. Encoding a way to discover the unknown generalises; asserting it is a coin flip. The synthesis prompt now
+carries a rule for exactly that, **untested against a real model** until the next seed runs.
 
 Two things make it worth reading anyway. The methods succeed on **different conventions** (SkillLoop 3/3 on
 unit errors where memory scored 0/3; memory 3/3 on return-shape errors where SkillLoop scored 1/3), which

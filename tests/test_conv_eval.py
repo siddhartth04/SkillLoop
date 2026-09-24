@@ -25,3 +25,28 @@ def test_gates_pass_only_with_real_headroom():
                        {"oracle": oracle_context(s)})
     g = gates(r["control"], r["control_repeat"], r["oracle"], trap)
     assert g["pass"] and g["control_rate"] == 0.0 and g["oracle_rate"] == 1.0
+
+
+def test_analysis_splits_by_what_the_training_feedback_revealed():
+    """The committed seed-2 run must still show the split the analysis is built on.
+
+    A task whose training attempt only ever printed "check failed" never showed the learner the correct
+    value, so raw past attempts cannot supply it. That is the case a learned skill has to earn its keep on,
+    and it is the split the UNKNOWN VALUES rule in the synthesis prompt is aimed at.
+    """
+    from qa.conv_eval.analyze import informative_conventions
+    from pathlib import Path
+    import qa.conv_eval.analyze as A
+
+    info = informative_conventions(Path(A.HERE) / "results" / "seed2_episodes")
+    assert info, "seed-2 training episodes must be committed for the analysis to work"
+    # keys and units never produced a traceback; cents and inplace did
+    assert info["keys"] == 0 and info["units"] == 0
+    assert info["cents"] > 0 and info["inplace"] > 0
+
+
+def test_sign_test_matches_known_values():
+    from qa.conv_eval.analyze import sign_test
+    assert sign_test(0, 0) == 1.0
+    assert sign_test(4, 0) == 0.125
+    assert round(sign_test(8, 0), 5) == 0.00781
