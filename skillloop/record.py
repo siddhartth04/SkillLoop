@@ -27,6 +27,24 @@ from typing import Any, Callable
 from .schema import Signal, Step, ToolCall, Trace
 
 
+UNVERIFIED_NOTE = (
+    "> UNVERIFIED: this skill was learned from a past failure but has not yet passed an independent\n"
+    "> re-run. Treat it as a hypothesis worth trying, not as established fact.\n\n"
+)
+
+
+def label_by_status(hit: dict[str, Any]) -> str:
+    """Prefix a recalled skill with its verification status.
+
+    An `active` skill has passed an independent re-run with a real check; a `candidate` has passed only
+    a model's judgement. Injected into a prompt the two read identically, so the agent cannot weigh them
+    differently - and a confidently-worded but wrong candidate is the most expensive failure this
+    library has, because it costs an attempt the agent would otherwise spend reasoning from the docs.
+    """
+    md = hit["skill_md"]
+    return UNVERIFIED_NOTE + md if hit.get("status") == "candidate" else md
+
+
 class Session:
     """Records what an agent did, then hands it to learn() on exit."""
 
@@ -66,7 +84,7 @@ class Session:
 
     def skills_text(self, task: str | None = None, limit: int = 3) -> str:
         """Same as recall(), already joined into prompt-ready text."""
-        return "\n\n".join(h["skill_md"] for h in self.recall(task, limit))
+        return "\n\n".join(label_by_status(h) for h in self.recall(task, limit))
 
     # ---------------- recording ----------------
     def say(self, content: str) -> "Session":
@@ -114,8 +132,8 @@ class Session:
         hs = self.hints()
         if not hs:
             return ""
-        return ("A past failure matching this error was turned into a verified procedure. Follow it:\n\n"
-                + "\n\n".join(h["skill_md"] for h in hs))
+        return ("A past failure matching this error was turned into a procedure. Follow it:\n\n"
+                + "\n\n".join(label_by_status(h) for h in hs))
 
     def observe(self, content: str) -> "Session":
         self.steps.append(Step("tool", str(content)))

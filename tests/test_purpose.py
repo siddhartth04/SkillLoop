@@ -197,3 +197,46 @@ def test_strong_embedding_match_fires_without_word_overlap(loop):
     assert [h["name"] for h in loop.recall(para) if h["name"] != "_principles"] == ["pytest-order-dependence"]
     loop.embed_strong = 0.99       # below the strong bar, the anchor rule applies again -> abstain
     assert not [h for h in loop.recall(para) if h["name"] != "_principles"]
+
+
+def test_unverified_candidates_are_labelled_in_the_prompt(loop):
+    """A candidate has passed only a model's judgement. It must not read like a proven procedure.
+
+    This is the failure mode the conventions eval exposed: a skill can state a confident specific that is
+    simply wrong, and the agent follows it and burns an attempt. Labelling does not make the skill correct,
+    but it lets the agent weigh it against the documentation in front of it.
+    """
+    run_agent(loop, "install pandas and build the weekly report")
+    loop.process()
+    q = "how do I get the pandas package working, the import keeps failing"
+
+    assert learned(loop)["verify-pip-install"] == "candidate"
+    text = loop.session(q, auto_learn=False).skills_text()
+    assert "verify-pip-install" in text
+    assert "UNVERIFIED" in text, "an unverified candidate must say so in the prompt"
+
+    def runner(task, skill_md):
+        s = loop.session(task, auto_learn=False)
+        s.tool("bash", {"cmd": "follow the skill"}, result="ok")
+        return s.verified_by(0)
+
+    loop.run_pending_evals(runner)
+    assert learned(loop)["verify-pip-install"] == "active"
+    promoted = loop.session(q, auto_learn=False).skills_text()
+    assert "verify-pip-install" in promoted
+    assert "UNVERIFIED" not in promoted, "a verified skill must not carry the warning"
+
+
+def test_gate_refuses_to_promote_a_skill_that_fails_its_rerun(loop):
+    """The central claim: a skill is a hypothesis until an independent check agrees."""
+    run_agent(loop, "install pandas and build the weekly report")
+    loop.process()
+    assert learned(loop)["verify-pip-install"] == "candidate"
+
+    def failing_runner(task, skill_md):
+        s = loop.session(task, auto_learn=False)
+        s.tool("bash", {"cmd": "follow the skill"}, error="still broken")
+        return s.verified_by(1)          # independent check FAILS
+
+    loop.run_pending_evals(failing_runner)
+    assert learned(loop)["verify-pip-install"] != "active", "a failing re-run must never reach active"
