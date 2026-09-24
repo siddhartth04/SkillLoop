@@ -3,7 +3,7 @@
 <img src="assets/skillloop-banner.png" alt="SkillLoop — procedural memory for LLM agents that learns skills from failure and gates them on a verification test" width="720"/>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/tests-72%20passing-18181b?style=for-the-badge" alt="tests"/>
+  <img src="https://img.shields.io/badge/tests-102%20passing-18181b?style=for-the-badge" alt="tests"/>
   <img src="https://img.shields.io/badge/python-3.10%2B-6366f1?style=for-the-badge" alt="python"/>
   <img src="https://img.shields.io/badge/license-MIT-8b5cf6?style=for-the-badge" alt="license"/>
   <a href="CALIBRATION.md"><img src="https://img.shields.io/badge/evidence-pre--registered-a855f7?style=for-the-badge" alt="evidence"/></a>
@@ -114,6 +114,11 @@ loop.run_pending_evals(runner)               # passes -> active; fails or crashe
 
 This project's defining trait is that **it does not overclaim.**
 
+> **Check every number yourself:** `python qa/reproduce.py` re-runs each claim below that does not need an
+> API key and verifies it against the figure published here — 9/9 in about two minutes. Results that needed a
+> model are replayed from committed raw data and labelled as such. If a claim ever stops reproducing, the
+> script exits non-zero.
+
 ### 🟡 Promising pilot — pre-registered, honest about power
 
 On **3 necessity-screened tasks** (each run 3×), where a baseline agent reliably fails, attaching learned skills flipped every task to success — replicated in direction across two model families. Statistics were fixed before results were seen.
@@ -126,6 +131,42 @@ On **3 necessity-screened tasks** (each run 3×), where a baseline agent reliabl
 **Read this honestly.** The independent unit is the *task*, and there are only three. Three tasks cannot reach p < 0.05 even with a perfect split — the sign test bottoms out at p = 0.25. So this is a **promising 3-task pilot with a clean directional signal**, *not* a significant result yet. (A per-trial test gives p = 0.0078, but repeated runs of the same task aren't independent, so that number is anti-conservative and we don't report it.) Reproduce and see for yourself: `python qa/report_ab.py evidence/ab.json`.
 
 **To earn a real claim, the project needs more distinct tasks** — the HumanEval+ run (in progress) is the path there.
+
+### 🧪 Head-to-head against a real baseline — including where it loses
+
+The pilot above shows skills beat *no memory*. The harder question is whether SkillLoop's machinery beats
+**simply pasting past attempts into the prompt**. A second evaluation asks exactly that, on a library that
+exists nowhere in pretraining: a seeded generator builds an API whose names, data and conventions all come
+from a random seed, so the model cannot know it and cannot have memorized it.
+
+Protocol ([`qa/conv_eval/PROTOCOL.md`](qa/conv_eval/PROTOCOL.md)) was **fixed before any model ran** — gates,
+metrics, statistical test and the exact verdict wording. Model: `openai/gpt-oss-120b`, temperature 0.
+
+| Condition | Solved (2 attempts) | vs control (paired) |
+|:--|:--:|:--:|
+| Control (docs only) | 3/18 = 17% | — |
+| Control, repeated *(null check)* | 5/18 = 28% | — |
+| Simple memory *(raw past attempts)* | 10/18 = 56% | 7–0, p = 0.016 |
+| **SkillLoop** | **11/18 = 61%** | **8–0, p = 0.008** |
+| Oracle *(perfect notes)* | 18/18 = 100% | — |
+
+**SkillLoop beats control (p = 0.008). It does *not* beat simple memory (4–3, p = 1.0).**
+
+That is the pre-registered verdict, reported as written: *"SkillLoop helps, but its extra machinery is not yet
+justified over simple memory."* Three of four seeds were **excluded by their own gates** before SkillLoop ran
+on them, leaving n = 18 — one seed. This is a single-seed result, not a settled one.
+
+Two things make it worth reading anyway. The methods succeed on **different conventions** (SkillLoop 3/3 on
+unit errors where memory scored 0/3; memory 3/3 on return-shape errors where SkillLoop scored 1/3), which
+points at combining them rather than choosing. And 7 of SkillLoop's 11 wins came on the **second** attempt —
+error-time recall, not task-start recall, is doing the work.
+
+Everything is in [`qa/conv_eval/RESULTS.md`](qa/conv_eval/RESULTS.md): every episode, every learned skill, and
+the failures. Validate the harness without a model or an API key:
+
+```bash
+python -m qa.conv_eval.run --selfcheck      # generator, checkers, gates, stats — all offline
+```
 
 ### ⚠️ Caveats that travel with those numbers
 
