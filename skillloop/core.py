@@ -235,7 +235,7 @@ class SkillLoop(RetrievalMixin):
         with self._lock:
             report = []
             errors: list[str] = []
-            from .llm import PendingManualCall
+            from .llm import PendingManualCall, QuotaExhausted
             for t in self.store.pending_traces(max_traces):
                 try:
                     report.append(self._process_one(t))
@@ -243,6 +243,18 @@ class SkillLoop(RetrievalMixin):
                     # leave the trace queued; re-running process() resumes once the answer is filled in
                     report.append({"trace_id": t.id, "awaiting_manual": p.key, "role": p.role, "path": p.path})
                     continue
+                except QuotaExhausted as e:
+                    # Every remaining trace would fail the same way. Stop now, leave them queued, and say so:
+                    # grinding through the rest produces a library that is missing most of its skills while
+                    # looking like one that simply learned little.
+                    self.store.log("error", t.id, repr(e))
+                    report.append({"trace_id": t.id, "quota_exhausted": str(e)})
+                    import warnings as _w
+                    _w.warn(f"SkillLoop: stopped processing - {e}. {len(self.store.pending_traces(999))} "
+                            f"trace(s) stay queued; re-run process() once the quota resets.",
+                            RuntimeWarning, stacklevel=2)
+                    obs.log("process.quota_exhausted", pending=len(self.store.pending_traces(999)))
+                    return report
                 except Exception as e:  # never let one bad trace stall the queue
                     self.store.log("error", t.id, repr(e))
                     report.append({"trace_id": t.id, "error": repr(e)})

@@ -138,6 +138,13 @@ class LLM:
             try:
                 return self._complete(system, user, max_tokens, temperature, role)
             except Exception as e:
+                if _is_daily_quota(str(e)):
+                    # Fail fast and say why: retrying a daily cap cannot succeed, and the silence is what
+                    # makes it look like a hung process rather than an exhausted account.
+                    raise QuotaExhausted(
+                        f"{self.provider} daily quota exhausted for model {self.model!r}; this is not a "
+                        f"transient rate limit and retrying will not help. Provider said: {str(e)[:200]}"
+                    ) from e
                 wait, exact = _retry_after(e)
                 if wait is None or attempt == self.max_retries:
                     raise
@@ -261,6 +268,25 @@ def _request_timeout() -> float:
         return max(5.0, float(os.getenv("SKILLLOOP_TIMEOUT", "90")))
     except ValueError:
         return 90.0
+
+
+class QuotaExhausted(RuntimeError):
+    """The provider's DAILY quota is gone, not a per-minute burst limit.
+
+    These look identical to an ordinary 429 in the SDK, but they are not the same failure: a per-minute limit
+    clears in seconds and retrying is right, while a daily limit clears at the provider's reset and retrying
+    just burns the retry budget and wall-clock time in silence. A run that hits this looks like a hang - the
+    process sits there, the keys all answer a trivial probe, and nothing explains why no progress is made.
+    Rotating keys does not help either when the quota is per ORGANIZATION, which is how Groq's free tier
+    works: eight keys in one org share one daily budget.
+    """
+
+
+def _is_daily_quota(msg: str) -> bool:
+    """True when a 429 is a daily/organization cap rather than a short burst limit."""
+    m = msg.lower()
+    return ("per day" in m or "tpd" in m or "rpd" in m
+            or ("quota" in m and "exceeded" in m))
 
 
 def _retry_after(e: Exception) -> tuple[float | None, bool]:

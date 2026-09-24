@@ -318,3 +318,45 @@ def test_a_verification_rerun_is_not_itself_learned_from(loop):
     n_after = loop.store.db.execute("SELECT COUNT(*) FROM traces").fetchone()[0]
     assert n_after > n_before, "the re-run is still recorded, for the audit trail"
     assert not loop.store.pending_traces(1), "but it must not sit in the learning queue"
+
+
+def test_daily_quota_is_distinguished_from_a_burst_rate_limit():
+    """A daily cap and a per-minute cap are both HTTP 429 and must not be treated the same.
+
+    A burst limit clears in seconds and retrying is correct. A daily limit clears at the provider's reset,
+    so the retry budget is spent in silence and the run looks like a hung process: no output, no error, and
+    every key still answering a trivial probe. A seed-4 run lost 13 minutes to exactly this before the cause
+    (Groq's 200k tokens-per-day, shared across every key in one organization) was visible at all.
+    """
+    from skillloop.llm import _is_daily_quota
+
+    daily = ("Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01km` service tier "
+             "`on_demand` on tokens per day (TPD): Limit 200000, Used 199716, Requested 613.")
+    burst = "Rate limit reached on tokens per minute (TPM): Limit 8000, Used 7900. Please try again in 1.77s"
+    assert _is_daily_quota(daily)
+    assert not _is_daily_quota(burst), "a burst limit must still be retried"
+
+
+def test_process_stops_and_says_so_when_the_quota_runs_out(loop):
+    """Every remaining trace would fail identically, so stop, keep them queued, and explain."""
+    import skillloop.core as core
+    from skillloop.llm import QuotaExhausted
+
+    for i in range(4):
+        run_agent(loop, f"install pandas and build report {i}")
+    original = core.SkillLoop._process_one
+
+    def out_of_quota(self, t):
+        raise QuotaExhausted("daily quota exhausted")
+
+    core.SkillLoop._process_one = out_of_quota
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            report = loop.process()
+    finally:
+        core.SkillLoop._process_one = original
+
+    assert any("quota_exhausted" in str(r) for r in report)
+    assert loop.store.pending_traces(99), "traces must stay queued for a later run, not be dropped"
+    assert [w for w in caught if "stopped processing" in str(w.message)], "the stop must be announced"

@@ -83,6 +83,14 @@ def main(seed: int, state: Path = STATE):
             print("promotion re-runs:", [(r.get("skill"), r.get("outcome")) for r in promo])
         while loop.store.pending_traces(1):         # resume: finish any unprocessed traces
             loop.process()
+        pending = len(loop.store.pending_traces(999))
+        if pending:
+            # Scoring now would measure a library that is missing most of its skills, and the report would
+            # look exactly like a run where the model learned little. That is how a quota limit turns into a
+            # false negative, so refuse to produce a number instead.
+            print(f"INCOMPLETE: {pending} trace(s) still unprocessed (quota or provider limit). "
+                  f"Re-run this command once the quota resets; everything already done is cached.")
+            return None
         skills = {s.name: s.status for s in loop.store.all_skills()}
         print("skills learned:", skills, flush=True)
         r["skillloop"] = Cache(d / "skillloop.jsonl").run(test, lambda t: skillloop_episode(agent, loop, suite, t))
