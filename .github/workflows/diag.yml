@@ -4,28 +4,28 @@ permissions:
   contents: write
 jobs:
   diag:
+    strategy:
+      matrix:
+        python: ["3.10", "3.12"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
+        with: { python-version: "${{ matrix.python }}" }
       - run: pip install -e ".[dev,openai,anthropic,mcp]" pyyaml mypy
-      - name: run tests exactly like ci
+      - name: full raw capture
         run: |
           set +e
-          python -m pytest tests -q > /tmp/out.txt 2>&1
-          echo "EXITCODE=$?" > CI_DIAG.txt
-          echo "=== installed plugins ===" >> CI_DIAG.txt
-          python -m pytest --version >> CI_DIAG.txt 2>&1
-          echo "=== SUMMARY ===" >> CI_DIAG.txt
-          tail -3 /tmp/out.txt >> CI_DIAG.txt
-          echo "=== FAILED/ERROR ===" >> CI_DIAG.txt
-          grep -E "^(FAILED|ERROR)" /tmp/out.txt >> CI_DIAG.txt
-          echo "=== FAILURE DETAIL ===" >> CI_DIAG.txt
-          sed -n '/=== FAILURES ===/,$p' /tmp/out.txt | head -150 >> CI_DIAG.txt
+          python -m pytest tests -q > /tmp/o.txt 2>&1
+          EC=$?
+          F="CI_DIAG_${{ matrix.python }}.txt"
+          echo "PYTHON=${{ matrix.python }} EXITCODE=$EC" > $F
+          echo "=== LAST 60 LINES RAW ===" >> $F
+          tail -60 /tmp/o.txt >> $F
           git config user.name ci-diag
           git config user.email ci@example.com
-          git add -f CI_DIAG.txt
-          git commit -m "ci diag output 2" || true
-          git push origin HEAD:skillloop-improvements || true
+          git pull --rebase origin skillloop-improvements || true
+          git add -f $F
+          git commit -m "diag ${{ matrix.python }}" || true
+          for i in 1 2 3 4 5; do git pull --rebase origin skillloop-improvements && git push origin HEAD:skillloop-improvements && break || sleep 5; done
           exit 0
