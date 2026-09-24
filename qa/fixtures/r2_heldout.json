@@ -1,0 +1,51 @@
+{
+  "_note": "Written BEFORE any retrieval change, against the r1 library, to avoid tuning to R1. Q = real tasks phrased as questions (must fire). S = raw error output an agent sees mid-task (must fire via error-time recall). T = traps: knowledge questions, creation tasks, creative requests on the same topics (must abstain).",
+  "Q_question_task": [
+    ["how do I change just the replicas value in deploy.yaml without touching the other replicas key", "yaml-single-key-edit"],
+    ["how do I combine base.yaml and prod.yaml so the lists get appended", "yaml-merge-two-files"],
+    ["why does pip refuse to install anything and say the environment is externally managed", "pip-externally-managed-env"],
+    ["why do I get ModuleNotFoundError for yaml right after pip installed pyyaml", "pip-import-name-mismatch"],
+    ["what do I do now that my rebase stopped with a conflict in utils.py", "git-rebase-conflict-resolve"],
+    ["how can I get back the feature branch I deleted yesterday", "git-recover-deleted-branch"],
+    ["why does every docker build reinstall all my npm dependencies", "docker-layer-cache-miss"],
+    ["why does my container exit right after docker run starts it", "docker-container-exits-immediately"],
+    ["why does test_orders pass on its own but fail in the full pytest run", "pytest-flaky-order-dependence"],
+    ["why does pytest say no tests ran and show ERROR collecting", "pytest-collection-error"],
+    ["how do I fix a query that does a seq scan on the users table and takes seconds", "postgres-missing-index-slow-query"],
+    ["what should I do about postgres saying too many clients already", "postgres-connection-pool-exhausted"],
+    ["how do I uppercase names.txt when tr leaves the accented letters alone", "bash-unicode-case-conversion"],
+    ["why does my backup script exit 0 even though no output file was written", "bash-exit-code-hides-failure"]
+  ],
+  "S_error_output": [
+    ["sed -i 's/replicas: 2/replicas: 4/' deploy.yaml changed 2 lines; worker.replicas also changed to 4", "yaml-single-key-edit"],
+    ["merged config: list 'plugins' replaced instead of appended, overlay lost keys from base", "yaml-merge-two-files"],
+    ["error: externally-managed-environment\n\u00d7 This environment is externally managed\n\u2570\u2500> To install Python packages system-wide, try apt install python3-xyz", "pip-externally-managed-env"],
+    ["Traceback (most recent call last):\n  File \"/app/main.py\", line 3, in <module>\n    import yaml\nModuleNotFoundError: No module named 'yaml'", "pip-import-name-mismatch"],
+    ["Auto-merging src/utils.py\nCONFLICT (content): Merge conflict in src/utils.py\nerror: could not apply 3f2a9c1... refactor utils\nhint: Resolve all conflicts manually", "git-rebase-conflict-resolve"],
+    ["error: pathspec 'feature/login' did not match any file(s) known to git; branch not found", "git-recover-deleted-branch"],
+    ["Step 4/9 : RUN npm install\n ---> Running in 8c1d2e\nno cached layers used, every build reinstalls dependencies", "docker-layer-cache-miss"],
+    ["CONTAINER ID   IMAGE    STATUS\n4b2c9a1f8e3d   api:1.2  Exited (0) 2 seconds ago", "docker-container-exits-immediately"],
+    ["FAILED tests/test_orders.py::test_total - passes with -k but fails in full run", "pytest-flaky-order-dependence"],
+    ["ImportError while loading conftest '/repo/tests/conftest.py'.\nERROR collecting tests/test_api.py\nno tests ran in 0.42s", "pytest-collection-error"],
+    ["Seq Scan on users  (cost=0.00..184320.00 rows=1 width=96) (actual time=0.03..2841.2 rows=1 loops=1)", "postgres-missing-index-slow-query"],
+    ["psycopg2.OperationalError: connection to server at \"10.0.0.5\", port 5432 failed: FATAL:  sorry, too many clients already", "postgres-connection-pool-exhausted"],
+    ["$ tr a-z A-Z < names.txt\nJOS\u00e9 M\u00fcLLER -- accented characters unchanged", "bash-unicode-case-conversion"],
+    ["backup.sh finished with exit 0 but no output file /var/backups/db.sql.gz; command succeeded but did nothing", "bash-exit-code-hides-failure"]
+  ],
+  "T_trap": [
+    ["what is the difference between yaml and json", null],
+    ["write a new docker-compose.yaml for a redis and a web service", null],
+    ["how does pip resolve dependency versions", null],
+    ["create a new python package with a setup.py and an import name", null],
+    ["what is git rebase and when should I use it instead of merge", null],
+    ["how many branches can a git repository have", null],
+    ["write a Dockerfile for a small flask app", null],
+    ["what is the difference between docker run and docker start", null],
+    ["write a pytest test for the add function", null],
+    ["what does pytest collect by default", null],
+    ["design a postgres schema for a blog with posts and comments", null],
+    ["what is the default max_connections setting in postgres", null],
+    ["write a poem about bash scripts", null],
+    ["what does exit code 0 mean in linux", null]
+  ]
+}
