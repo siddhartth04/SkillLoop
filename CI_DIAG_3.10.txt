@@ -1,0 +1,17 @@
+PYTHON=3.10 EXITCODE=0
+=== LAST 60 LINES RAW ===
+........................................................................ [ 70%]
+..............................                                           [100%]
+=============================== warnings summary ===============================
+tests/test_loop.py::test_full_loop
+tests/test_loop.py::test_principles
+tests/test_loop.py::test_per_bullet_feedback_and_pruning
+tests/test_loop.py::test_concurrent_writes_thread_local_connections
+tests/test_loop.py::test_verified_by_does_not_flip_booleans
+tests/test_purpose.py::test_mistake_is_learned_then_not_repeated_under_new_phrasings
+tests/test_purpose.py::test_repeat_mistake_rate_drops
+  /home/runner/work/SkillLoop/SkillLoop/skillloop/core.py:611: RuntimeWarning: SkillLoop: 3+ traces are queued but nothing is learning from them. Call loop.process() after tasks, use SkillLoop(auto_process=True), or set SKILLLOOP_AUTO_PROCESS=1.
+    return self._learn_body(t, san)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+102 passed, 7 warnings in 15.34s
