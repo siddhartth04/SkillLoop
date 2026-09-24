@@ -17,6 +17,7 @@ from skillloop.llm import LLM
 from skillloop.safety import redact_text, sanitize_trace, scan_injection
 from skillloop.store import Skill
 from skillloop.playbook import new_bullet
+from conftest import _cleanup
 
 
 def _skill(body_bullets):
@@ -98,7 +99,7 @@ def test_poisoned_trace_end_to_end_does_not_reach_active():
     assert sk is None or sk.status == "quarantine"
     assert lp.recall("build the thing") == []
     LLM._fake_handler = None
-    shutil.rmtree(home)
+    _cleanup(home, locals())
 
 
 def test_size_cap_blocks_trace_flooding():

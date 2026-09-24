@@ -13,6 +13,7 @@ from skillloop.store import Skill
 from skillloop.core import SkillLoop as _SL  # noqa: F401
 from skillloop.gate import Policy
 from skillloop.llm import LLM
+from conftest import _cleanup
 
 BULLETS = [
     {"section": "preconditions", "content": "A python interpreter is available and `pip` resolves to it."},
@@ -101,7 +102,11 @@ def loop():
     lp = SkillLoop(home=home, llm=LLM(provider="fake"), policy=Policy())
     yield lp
     LLM._fake_handler = None
-    shutil.rmtree(home)
+    # Close the SQLite connection before deleting the directory. Windows refuses to unlink a file that is
+    # still open (WinError 32), so without this the suite reports teardown errors on Windows for tests whose
+    # bodies all passed. Linux allows the unlink, which is why CI never saw it.
+    lp.store.close()
+    shutil.rmtree(home, ignore_errors=True)
 
 
 def test_full_loop(loop):
@@ -740,7 +745,7 @@ def test_manual_provider_queues_and_resumes(tmp_path):
             os.environ.pop("SKILLLOOP_MANUAL_DIR", None)
         else:
             os.environ["SKILLLOOP_MANUAL_DIR"] = monkey
-        shutil.rmtree(home)
+        _cleanup(home, locals())
 
 
 def test_reprocessing_does_not_inflate_evidence(loop):
@@ -799,7 +804,7 @@ def test_manual_answer_validation(tmp_path):
             os.environ.pop("SKILLLOOP_MANUAL_DIR", None)
         else:
             os.environ["SKILLLOOP_MANUAL_DIR"] = old
-        shutil.rmtree(home)
+        _cleanup(home, locals())
 
 
 # ---------------------------------------------------------------- reviewer-reported bugs
@@ -828,7 +833,7 @@ def test_concurrent_writes_thread_local_connections():
         total_errs = sum(ex.map(work, range(8)))
     assert total_errs == 0, f"{total_errs} concurrency errors"
     assert loop.store.stats()["traces"] == 200
-    shutil.rmtree(home)
+    _cleanup(home, locals())
 
 
 def test_sanitizer_enforces_hard_cap():
@@ -857,7 +862,7 @@ def test_store_is_a_context_manager():
         st.log("t", "s", "d")
         assert getattr(st._local, "conn", None) is not None
     assert getattr(st._local, "conn", None) is None
-    shutil.rmtree(home)
+    _cleanup(home, locals())
 
 
 def test_verified_by_does_not_flip_booleans(loop):
@@ -912,7 +917,7 @@ def test_quarantined_skill_resumes_into_gate(monkeypatch, tmp_path):
             os.environ.pop("SKILLLOOP_MANUAL_DIR", None)
         else:
             os.environ["SKILLLOOP_MANUAL_DIR"] = old
-        shutil.rmtree(home)
+        _cleanup(home, locals())
 
 # --------------------------------------------------------------------------- retrieval profile cache
 # The failure mode of a cache is silent staleness: retrieval keeps working, just on old data. Each of these
