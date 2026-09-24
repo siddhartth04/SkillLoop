@@ -84,6 +84,32 @@ with loop.session("migrate the postgres schema") as s:
 
 That's the whole integration. The `session` records the trajectory and submits it on exit — including an uncaught exception, which is often the most valuable trace of all. Already have trajectories in OpenAI/Anthropic format? `loop.learn({"task": ..., "format": "openai", "messages": [...]})` takes them directly.
 
+### The lesson arrives when the mistake does
+
+Mistakes rarely show up in the task description; they show up mid-task, as an error. When a recorded tool call fails, the session matches the error against every skill's recorded symptoms and queues the relevant ones for the agent's next step:
+
+```python
+    s.tool("python", {"code": code}, error=stderr)   # a failed call
+    prompt += s.hints_text()                          # the matching lesson, before the next step ('' if none)
+```
+
+Or push them straight into your agent with `loop.session(task, on_hint=callback)`. Outside a session: `loop.recall_for_error(error_text, task=...)`.
+
+### Keep the loop running
+
+`learn()` only queues. Skills are written by `loop.process()`: call it after tasks, or use `SkillLoop(auto_process=True)` / `SKILLLOOP_AUTO_PROCESS=1` for a background worker. SkillLoop warns once if traces pile up with nothing processing them.
+
+A new skill is a *candidate* until the agent re-runs the task that produced it, with the skill in context, and passes an independent check. Automate that re-run:
+
+```python
+def runner(task, skill_md):                 # your agent, with skill_md in its prompt
+    s = loop.session(task, auto_learn=False)
+    ...                                      # run it
+    return s.verified_by(check.returncode)   # a real check, not the agent's opinion
+
+loop.run_pending_evals(runner)               # passes -> active; fails or crashes -> not promoted
+```
+
 ## Status & honest scope
 
 This project's defining trait is that **it does not overclaim.**
@@ -111,6 +137,23 @@ On **3 necessity-screened tasks** (each run 3×), where a baseline agent reliabl
 ### 🔬 What we're proudest of
 
 SkillLoop **caught its own false positives five times** during development — impossible task checkers, a hallucinating agent model, a GIL-masked concurrency test, rate-limit errors miscounted as failures, and a wrong-interpreter checker. Each would have manufactured a fake result. All documented in [`CALIBRATION.md`](CALIBRATION.md), including the experiments that *failed*. The rigor is the point.
+
+### 🎯 Retrieval: does the lesson come back when it matters?
+
+Deterministic, no API key, reproducible with `python qa/run_r1.py` and `python qa/run_r2.py`.
+
+| Probe class | n | before | now |
+|---|---|---|---|
+| **R1** A. direct phrasing | 14 | 13 | **14** |
+| **R1** B. paraphrase, no shared words | 14 | 7 | 7 |
+| **R1** C. sibling skills | 14 | 14 | 14 |
+| **R1** D. lexical traps (must abstain) | 14 | 8 | **14** |
+| **R1** E. unrelated (must abstain) | 14 | 14 | 14 |
+| **R2** Q. real tasks phrased as questions | 14 | 2 | **14** |
+| **R2** S. raw error output, mid-task | 14 | 12 | **14** |
+| **R2** T. knowledge / creation traps (must abstain) | 14 | 8 | **14** |
+
+Stable from 0 to 2,000 distractor skills. Caveats: **R2 was written before the changes, but by the author of the fixes and against the same library**; treat it as a stress test, not independent confirmation. One R2 trap ("how does pip resolve…") was fixed after it was seen. **R1-B is unsolved lexically**: those probes share no words with their skill, which only embeddings can match. The embedding path now accepts strong matches without word overlap (`SKILLLOOP_EMBED_STRONG`, default 0.62); that is unit-tested but **not yet measured with a real embedding model**. `tests/test_purpose.py` runs the whole loop (fail, learn, rephrase, error mid-task, re-run, promote) against a simulated agent.
 
 ## Use it with any agent
 
