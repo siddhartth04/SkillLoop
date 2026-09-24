@@ -19,8 +19,15 @@ environment favours both learners equally; SkillLoop must beat it, not just cont
 - control: API doc only. Run twice (null check).
 - oracle: API doc + a perfect one-line note per active convention (ceiling).
 - memory: API doc + every training attempt verbatim with its test outcome (last 8,000 chars).
-- skillloop: real SkillLoop. Training episodes go through Session -> learn() -> process() with the same model.
-  At test time: recall() at task start, error-time hints on a failed attempt. Library frozen during test.
+- skillloop: real SkillLoop. Training episodes go through Session -> learn() -> process() with the same model,
+  then each new skill's own task is re-run with the skill in context and graded by the task's hidden checker,
+  so a skill only reaches `active` if an independent check agrees. At test time: recall() at task start,
+  error-time hints on a failed attempt. Library frozen during test.
+- combined: the skillloop condition plus the memory condition's raw past attempts in the same prompt.
+  **Added after seed 2, and pre-registered here before it was run.** Seed 2 showed the two methods solving
+  different conventions (skills 3/3 on unit errors where memory scored 0/3; memory 3/3 on return-shape errors
+  where skills scored 1/3), so the hypothesis is that they add rather than overlap. Reported separately from
+  the original comparisons, which stand as first specified.
 Training episodes are run once and shared by memory and skillloop. At test time the agent sees a traceback if its
 code crashed, otherwise only "the result is incorrect"; the hidden check is never shown to the agent.
 
@@ -35,6 +42,8 @@ Harness errors are never scored as agent failures.
 - Secondary: first-attempt success; no-trap success (harm: skills misapplied where no convention is active).
 - Test: exact two-sided sign test on discordant pairs (McNemar exact), alpha 0.05.
   Comparisons: skillloop vs control (primary), skillloop vs memory, memory vs control.
+  Secondary, added with the combined condition: combined vs memory, combined vs skillloop. These are
+  exploratory: seed 2 motivated them, so they need a seed that seed 2 did not choose to count as evidence.
 
 ## Plan
 `--selfcheck` (no model) -> `--pilot` (seed 101, 12 tasks, gates only; read every failure) -> `--full --seeds 1 2 3`

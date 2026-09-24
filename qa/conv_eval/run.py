@@ -136,15 +136,25 @@ def run_promotion(agent, loop: SkillLoop, suite: Suite, records: list[tuple[Task
     return loop.run_pending_evals(runner, limit=25)
 
 
-def skillloop_episode(agent, loop: SkillLoop, suite: Suite, t: Task) -> Episode:
+def skillloop_episode(agent, loop: SkillLoop, suite: Suite, t: Task, condition: str = "skillloop",
+                      extra_context: str = "") -> Episode:
+    """One test episode with the skill library: recall at task start, error-time hints after a failure.
+
+    `extra_context` is prepended to the recalled skills. The `combined` condition uses it to give the agent
+    the raw past attempts as well, which is the hypothesis seed 2 pointed at: the two methods won on
+    different conventions (skills 3/3 on unit errors where memory scored 0/3, memory 3/3 on return-shape
+    errors where skills scored 1/3), so giving the agent both should beat either alone.
+    """
     s = loop.session(t.prompt, agent="conv-eval", auto_learn=False)
     ctx = s.skills_text()
+    if extra_context:
+        ctx = extra_context.strip() + "\n\n" + ctx if ctx else extra_context.strip()
 
     def on_fail(code, feedback):
         s.tool("python", {"code": code}, error=feedback)
         return s.hints_text()
 
-    ep = run_episode(agent, suite, t, "skillloop", ctx, on_fail=on_fail)
+    ep = run_episode(agent, suite, t, condition, ctx, on_fail=on_fail)
     ep.hints_shown = list(s.skills_used)
     return ep
 
@@ -213,7 +223,8 @@ def full(seeds: list[int]):
     agent, learner = make_models()
     OUT.mkdir(exist_ok=True)
     report = {"seeds": seeds, "started": time.strftime("%Y-%m-%d %H:%M"), "per_seed": {}}
-    allc: dict[str, dict[str, Episode]] = {k: {} for k in ("control", "control_repeat", "oracle", "memory", "skillloop")}
+    allc: dict[str, dict[str, Episode]] = {k: {} for k in ("control", "control_repeat", "oracle", "memory",
+                                                           "skillloop", "combined")}
     for seed in seeds:
         suite = generate(seed)
         test = suite.split("test")
@@ -237,6 +248,10 @@ def full(seeds: list[int]):
         skills = {s.name: s.status for s in loop.store.all_skills()}
         print("skills learned:", skills)
         r["skillloop"] = {t.id: skillloop_episode(agent, loop, suite, t) for t in test}
+        # COMBINED: skills AND raw past attempts. Seed 2 showed the two methods solve different
+        # conventions, so this tests whether they add rather than overlap.
+        mem_ctx = memory_context(records)
+        r["combined"] = {t.id: skillloop_episode(agent, loop, suite, t, "combined", mem_ctx) for t in test}
         seed_rep.update({"skills": skills, "promotion": promo, "train_success": sum(e.success for _, e in records),
                          "learn_report": learn_report})
         for k in allc:
@@ -253,7 +268,9 @@ def full(seeds: list[int]):
         report["harm_notrap"] = {k: rate(allc[k], notrap) for k in allc}
         report["paired"] = {"skillloop_vs_control": paired(allc["skillloop"], allc["control"], trap),
                             "skillloop_vs_memory": paired(allc["skillloop"], allc["memory"], trap),
-                            "memory_vs_control": paired(allc["memory"], allc["control"], trap)}
+                            "memory_vs_control": paired(allc["memory"], allc["control"], trap),
+                            "combined_vs_memory": paired(allc["combined"], allc["memory"], trap),
+                            "combined_vs_skillloop": paired(allc["combined"], allc["skillloop"], trap)}
         report["verdict"] = verdict(report)
     report["episodes"] = {k: {i: vars(e) for i, e in v.items()} for k, v in allc.items()}
     path = OUT / f"full-{int(time.time())}.json"
