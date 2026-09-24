@@ -18,7 +18,7 @@ from skillloop import SkillLoop
 from .generator import generate
 from .harness import Episode, run_episode
 from .run import (OUT, gates, make_models, memory_context, oracle_context, paired, print_report, rate,
-                  skillloop_episode, skillloop_learn, verdict)
+                  run_promotion, skillloop_episode, skillloop_learn, verdict)
 
 STATE = Path("/home/claude/conv_state")
 
@@ -77,6 +77,10 @@ def main(seed: int, state: Path = STATE):
         n_traces = loop.store.db.execute("SELECT COUNT(*) FROM traces").fetchone()[0]
         if n_traces == 0:
             skillloop_learn(loop, records)          # submits traces + processes
+            # close the gate: re-run each new skill's own task, graded by the hidden check, so the eval
+            # actually exercises promotion instead of leaving every skill at `candidate`
+            promo = run_promotion(agent, loop, suite, records)
+            print("promotion re-runs:", [(r.get("skill"), r.get("outcome")) for r in promo])
         while loop.store.pending_traces(1):         # resume: finish any unprocessed traces
             loop.process()
         skills = {s.name: s.status for s in loop.store.all_skills()}

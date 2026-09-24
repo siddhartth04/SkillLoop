@@ -108,6 +108,34 @@ def skillloop_learn(loop: SkillLoop, records: list[tuple[Task, Episode]]) -> lis
     return report
 
 
+def run_promotion(agent, loop: SkillLoop, suite: Suite, records: list[tuple[Task, Episode]]) -> list[dict]:
+    """Close the gate: re-run each new skill's own task with the skill in context, graded by the hidden check.
+
+    Without this the eval stops at `candidate` and never exercises the project's central claim, that a skill
+    is a hypothesis until an independent check agrees. The re-run is a real agent episode and the verdict
+    comes from the task's checker, never from the model's opinion of its own work.
+    """
+    by_prompt = {t.prompt: t for t, _ in records}
+
+    def runner(task_prompt: str, skill_md: str):
+        task = by_prompt.get(task_prompt)
+        if task is None:                      # the eval only knows how to grade its own training tasks
+            return {"task": task_prompt, "outcome": "failure",
+                    "steps": [{"role": "tool", "content": "no checker for this task"}]}
+        ep = run_episode(agent, suite, task, "promotion", skill_md, max_attempts=1)
+        s = loop.session(task_prompt, agent="conv-eval-promotion", auto_learn=False)
+        if ep.harness_error or not ep.attempts:
+            s.tool("python", {}, error=ep.harness_error or "no attempt")
+            return s.verified_by(1)
+        att = ep.attempts[-1]
+        s.tool("python", {"code": att["code"]},
+               result="tests passed" if att["verdict"]["ok"] else None,
+               error=None if att["verdict"]["ok"] else learning_message(task, att["verdict"]))
+        return s.verified_by(bool(att["verdict"]["ok"]))      # the hidden check decides, not the agent
+
+    return loop.run_pending_evals(runner, limit=25)
+
+
 def skillloop_episode(agent, loop: SkillLoop, suite: Suite, t: Task) -> Episode:
     s = loop.session(t.prompt, agent="conv-eval", auto_learn=False)
     ctx = s.skills_text()
@@ -204,10 +232,12 @@ def full(seeds: list[int]):
         r["memory"] = {t.id: run_episode(agent, suite, t, "memory", memory_context(records)) for t in test}
         loop = SkillLoop(home=tempfile.mkdtemp(prefix=f"conv-sl-{seed}-"), llm=learner)
         learn_report = skillloop_learn(loop, records)
+        promo = run_promotion(agent, loop, suite, records)
+        print("promotion re-runs:", [(r.get("skill"), r.get("outcome")) for r in promo])
         skills = {s.name: s.status for s in loop.store.all_skills()}
         print("skills learned:", skills)
         r["skillloop"] = {t.id: skillloop_episode(agent, loop, suite, t) for t in test}
-        seed_rep.update({"skills": skills, "train_success": sum(e.success for _, e in records),
+        seed_rep.update({"skills": skills, "promotion": promo, "train_success": sum(e.success for _, e in records),
                          "learn_report": learn_report})
         for k in allc:
             allc[k].update(r[k])
