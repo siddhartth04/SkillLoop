@@ -28,7 +28,7 @@ class Cache:
         self.path = path
         self.data: dict[str, Episode] = {}
         if path.exists():
-            for line in path.read_text().splitlines():
+            for line in path.read_text(encoding="utf-8").splitlines():
                 if line.strip():
                     d = json.loads(line)
                     self.data[d["task_id"]] = Episode(**d)
@@ -43,7 +43,7 @@ class Cache:
                 print(f"  provider failure on {t.id}, will retry on resume: {ep.harness_error[:120]}", flush=True)
                 continue
             self.data[t.id] = ep
-            with self.path.open("a") as f:
+            with self.path.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(vars(ep), default=str) + "\n")
         return self.data
 

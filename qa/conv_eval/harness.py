@@ -46,7 +46,8 @@ def extract_code(text: str) -> str:
 RUNNER = r'''
 import json, sys, traceback, importlib
 sys.path.insert(0, sys.argv[1])
-code = open(sys.argv[2]).read(); check = open(sys.argv[3]).read(); pkg = sys.argv[4]
+code = open(sys.argv[2], encoding="utf-8").read()
+check = open(sys.argv[3], encoding="utf-8").read(); pkg = sys.argv[4]
 mod = importlib.import_module(pkg)
 ns = {"__name__": "__main__", pkg: mod}
 try:
@@ -65,15 +66,16 @@ print(json.dumps({"ok": ok, "stage": "check", "error": "" if ok else "check fail
 
 def execute(suite: Suite, task: Task, code: str, timeout: float = 10.0) -> dict:
     d = tempfile.mkdtemp(prefix="conv-")
-    with open(os.path.join(d, f"{suite.pkg}.py"), "w") as f:
+    with open(os.path.join(d, f"{suite.pkg}.py"), "w", encoding="utf-8") as f:
         f.write(suite.library)
     for name, body in (("code.txt", code), ("check.txt", task.check), ("runner.py", RUNNER)):
-        with open(os.path.join(d, name), "w") as f:
+        with open(os.path.join(d, name), "w", encoding="utf-8") as f:
             f.write(body)
     try:
         p = subprocess.run([sys.executable, os.path.join(d, "runner.py"), d, os.path.join(d, "code.txt"),
                             os.path.join(d, "check.txt"), suite.pkg], capture_output=True, text=True,
-                           timeout=timeout, cwd=d)
+                           timeout=timeout, cwd=d, encoding="utf-8", errors="replace",
+                           env={**os.environ, "PYTHONIOENCODING": "utf-8"})
     except subprocess.TimeoutExpired:
         return {"ok": False, "stage": "code", "error": "TimeoutError: code ran longer than 10s"}
     try:
