@@ -226,6 +226,7 @@ class SkillLoop(RetrievalMixin):
         """Run the learning loop over queued traces. Safe to call repeatedly."""
         with self._lock:
             report = []
+            errors: list[str] = []
             from .llm import PendingManualCall
             for t in self.store.pending_traces(max_traces):
                 try:
@@ -237,7 +238,18 @@ class SkillLoop(RetrievalMixin):
                 except Exception as e:  # never let one bad trace stall the queue
                     self.store.log("error", t.id, repr(e))
                     report.append({"trace_id": t.id, "error": repr(e)})
+                    errors.append(repr(e))
                 self.store.mark_processed(t.id)
+            if errors:
+                # A trace that raises produces no skill, and until now that was indistinguishable from a
+                # trace that legitimately taught nothing. An eval could therefore score a library that had
+                # silently lost every skill (see CALIBRATION.md, 2026-09-25) and report it as a result.
+                import warnings as _w
+                kinds = sorted({e.split("(")[0] for e in errors})
+                _w.warn(f"SkillLoop: {len(errors)} trace(s) failed during process() and produced no skill "
+                        f"({', '.join(kinds)}). These are errors, not lessons; the library is incomplete.",
+                        RuntimeWarning, stacklevel=2)
+                obs.log("process.errors", count=len(errors), kinds=kinds)
             if self._lessons_since_distill >= self.policy.principle_every_n_lessons:
                 try:
                     new = distill_principles(self.llm, self.store)

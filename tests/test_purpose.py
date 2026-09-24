@@ -259,3 +259,32 @@ def test_a_skill_containing_non_ascii_survives_a_save_and_reload(loop):
     assert back is not None, "a skill with non-ASCII text must survive the round trip"
     assert back.description == tricky
     assert (loop.store.skills_dir / "unicode-safe-skill" / "SKILL.md").exists()
+
+
+def test_a_trace_that_errors_warns_instead_of_silently_producing_no_skill(loop):
+    """A failed trace must be distinguishable from a trace that legitimately taught nothing.
+
+    In the seed-4 conventions run, five of six skills were destroyed by an encoding error while being saved.
+    process() logged each one and carried on, so the library simply came out nearly empty - which looks
+    exactly like a run where the model found nothing worth learning. The eval then scored that library and
+    produced a clean, plausible, WRONG verdict. Failing traces now say so out loud.
+    """
+    import skillloop.core as core
+
+    run_agent(loop, "install pandas and build the weekly report")
+    original = core.SkillLoop._process_one
+
+    def boom(self, t):
+        raise UnicodeEncodeError("charmap", "x", 0, 1, "simulated encoding failure")
+
+    core.SkillLoop._process_one = boom
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            loop.process()
+    finally:
+        core.SkillLoop._process_one = original
+
+    msgs = [str(w.message) for w in caught if "produced no skill" in str(w.message)]
+    assert msgs, "a trace that raises must warn, not fail silently"
+    assert "UnicodeEncodeError" in msgs[0], "the warning must name the error kind"
