@@ -13,4 +13,5 @@ jobs:
       - run: pip install -e ".[dev,openai,anthropic,mcp]" pyyaml mypy
       - run: python -m pytest tests -q
       - run: python demo/run_demo.py --fake
+      - run: python qa/reproduce.py        # every README claim must still reproduce
       - run: mypy skillloop --ignore-missing-imports --no-strict-optional || true   # advisory for now

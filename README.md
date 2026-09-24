@@ -62,6 +62,21 @@ Follow the loop in the diagram above. Here is exactly what happens on each pass:
 
 > **A skill is a hypothesis until it passes a test.**
 
+### The same loop, with every rejection drawn
+
+The diagram above is the happy path. This is what actually happens to a trace — including the six places it
+can be thrown away, and the two *independent* checks a skill must clear before the agent is allowed to
+trust it:
+
+<div align="center">
+<img src="assets/pipeline.svg" alt="Detailed SkillLoop pipeline: learn() through reflect, skeptic pass, synthesize, shape check, security scan, judge eval to candidate, then a host eval re-run to active, with every rejection path drawn" width="100%"/>
+</div>
+
+The distinction that matters for evaluating this project: the **judge eval** is a model checking a skill's own
+assertions, but the **host eval** re-runs the real task with the skill in context and grades it with an exit
+code or a checker. A skill reaches `active` only when that second, non-model check agrees. A skill whose hit
+rate later collapses in real use is demoted back to quarantine.
+
 ## Quickstart
 
 ```bash
@@ -226,6 +241,9 @@ Fills the **procedural-memory** gap most agent-memory tools leave open (they do 
 
 - [`CALIBRATION.md`](CALIBRATION.md) — every experiment, including the failures and the self-caught bugs *(the evidence page)*
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — Docker, config, health, backup, security posture
+- [`qa/conv_eval/PROTOCOL.md`](qa/conv_eval/PROTOCOL.md) — the conventions eval, pre-registered before any model ran
+- [`qa/conv_eval/RESULTS.md`](qa/conv_eval/RESULTS.md) — its results, including where SkillLoop loses
+- `python qa/reproduce.py` — verify every offline claim in this README in one command
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute, and the honesty ground rules
 
 ## License
