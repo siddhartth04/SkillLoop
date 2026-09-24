@@ -1,7 +1,9 @@
 EXITCODE=0
-=== SUMMARY LINE ===
+=== installed plugins ===
+pytest 9.1.1
+=== SUMMARY ===
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-102 passed, 7 warnings in 14.67s
-=== FAILED/ERROR LIST ===
-=== FIRST 200 LINES OF FAILURES ===
+102 passed, 7 warnings in 10.67s
+=== FAILED/ERROR ===
+=== FAILURE DETAIL ===
