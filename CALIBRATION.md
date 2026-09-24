@@ -3,6 +3,45 @@
 Run `skillloop calibrate` whenever you change a model or a prompt. This file records what past runs found and
 what changed because of them, so the prompts have a paper trail.
 
+## 2026-09-25 — a text encoding nearly manufactured a negative result
+
+**The sixth self-caught false positive, and the closest call so far.**
+
+Seed 4 of the conventions eval was run on Windows against `openai/gpt-oss-120b`. It passed every gate (null
+agreement 94.4%, control 22%, oracle 100%) and returned a clean, plausible, *unfavourable* verdict:
+
+```
+skillloop  8/18 = 0.444      memory  11/18 = 0.611      control  4/18 = 0.222
+VERDICT: No significant improvement over control.
+```
+
+Read at face value, that is evidence against the project's central claim, on a seed chosen before the data was
+seen. The report also showed five of six learned skills sitting in `quarantine`, which looked like the
+verification gate doing its job and rejecting weak skills.
+
+It was not. The event log showed the real cause:
+
+```
+error  UnicodeEncodeError('charmap', "---
+name: check-function-index...
+```
+
+`Store.save_skill` wrote `SKILL.md` with `write_text()` and no encoding, so Python used the platform default,
+which on Windows is cp1252. The model had written a **non-breaking hyphen (U+2011)** in the skill text. Every
+skill containing one was destroyed on write and never entered the library.
+
+The consequence for the measurement: the agent had **one** skill available across 21 test episodes, and in 14
+of them it received nothing at all — it was silently running as the control condition while being scored as
+SkillLoop. The comparison was not weak evidence, it was not evidence.
+
+**What was wrong with the evaluation, not just the code:** a skill that fails to save and a skill that fails
+its gate were indistinguishable in the report. Both showed up as "not active". The run is now re-done with the
+encoding fixed, and the same failure would still not announce itself, which is the part worth remembering.
+
+Fixed: all twelve text reads and writes in `skillloop/` specify UTF-8, as do the eval's cache and report files.
+Regression test: a skill containing U+2011, an em dash, smart quotes and a checkmark must survive a save and
+reload (`tests/test_purpose.py`).
+
 ## 2026-09-10 — first live run (Groq free tier)
 
 Models: reflect/synth/judge = `openai/gpt-oss-120b`, outcome/inject = `openai/gpt-oss-20b`.
