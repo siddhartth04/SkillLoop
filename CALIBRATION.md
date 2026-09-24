@@ -3,6 +3,35 @@
 Run `skillloop calibrate` whenever you change a model or a prompt. This file records what past runs found and
 what changed because of them, so the prompts have a paper trail.
 
+## 2026-09-25 (later still) — a daily quota that looked like a hung process
+
+**Not a false positive: a false *nothing*.** The run simply stopped, and nothing said why.
+
+The third seed-4 attempt made no progress for 13 minutes. No output, no exception, 3 of 18 traces processed.
+Every one of the eight keys answered a trivial probe in 0.6s, so the provider was plainly up. A single
+`process()` call on one trace was timed directly, and only then did the cause surface:
+
+```
+Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01km...`
+service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199716
+```
+
+Two things made this invisible. Groq's free tier caps tokens **per day per organization**, so eight keys in
+one account share one budget and the key rotation that exists precisely for rate limits cannot help. And the
+rate-limit headers the client can read (`x-ratelimit-remaining-tokens`) describe only the per-minute window,
+which looked entirely healthy at 7,923 of 8,000.
+
+Both limits arrive as HTTP 429, and the client treated them identically: six retries with backoff, in
+silence, for a condition that resolves at midnight rather than in seconds.
+
+Fixed so the failure is legible rather than mute:
+- `QuotaExhausted` is raised immediately for a daily/organization cap, quoting the provider's own message.
+  Burst limits keep retrying as before.
+- `process()` stops on it, leaves the remaining traces queued and warns, rather than grinding out a library
+  missing most of its skills.
+- The eval refuses to score while any trace is unprocessed. That is the step that matters: without it, a
+  quota limit silently becomes a *result*, and it would have been the third such false negative in one day.
+
 ## 2026-09-25 (later) — the verification loop was feeding itself
 
 **The seventh self-caught false positive, found in the re-run of the sixth.**
