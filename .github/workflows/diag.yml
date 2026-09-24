@@ -1,5 +1,7 @@
 name: diag
 on: [push]
+permissions:
+  contents: write
 jobs:
   diag:
     runs-on: ubuntu-latest
@@ -8,17 +10,20 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -e ".[dev,openai,anthropic,mcp]" pyyaml
-      - name: pytest with summary
+      - name: run tests and commit output
         run: |
           set +e
-          python -m pytest tests -q > out.txt 2>&1
-          echo "EXIT=$?" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          grep -E "^(FAILED|ERROR)" out.txt | head -40 >> $GITHUB_STEP_SUMMARY
-          tail -5 out.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "### Tracebacks" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          grep -A 25 "=== FAILURES ===" out.txt | head -80 >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          python -m pytest tests -q > /tmp/out.txt 2>&1
+          echo "EXITCODE=$?" > CI_DIAG.txt
+          echo "=== SUMMARY LINE ===" >> CI_DIAG.txt
+          tail -3 /tmp/out.txt >> CI_DIAG.txt
+          echo "=== FAILED/ERROR LIST ===" >> CI_DIAG.txt
+          grep -E "^(FAILED|ERROR)" /tmp/out.txt >> CI_DIAG.txt
+          echo "=== FIRST 200 LINES OF FAILURES ===" >> CI_DIAG.txt
+          sed -n '/=== FAILURES ===/,$p' /tmp/out.txt | head -200 >> CI_DIAG.txt
+          git config user.name ci-diag
+          git config user.email ci@example.com
+          git add -f CI_DIAG.txt
+          git commit -m "ci diag output" || true
+          git push origin HEAD:skillloop-improvements || true
           exit 0
