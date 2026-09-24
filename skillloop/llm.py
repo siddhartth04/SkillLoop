@@ -98,10 +98,15 @@ class LLM:
             if single and single not in pool:
                 pool.insert(0, single)
             self._keys = pool or [None]          # None -> let the SDK resolve (env / default)
-            # start on a random key: several clients (agent + learner, parallel workers) sharing one pool would
-            # otherwise all hammer key #0 and only spread out after each hits its rate limit
-            import random as _random
-            self._key_idx = _random.randrange(len(self._keys))
+            # Several clients (agent + learner, parallel workers) sharing one key pool would all hammer key #0
+            # and only spread out after each hits its rate limit. Starting at a random offset avoids that, but
+            # it makes the starting key unpredictable, so it is opt-in: set SKILLLOOP_SPREAD_KEYS=1 when you
+            # actually run several clients against one pool. The default start is deterministic (key 0).
+            if os.getenv("SKILLLOOP_SPREAD_KEYS", "").lower() in ("1", "true", "yes"):
+                import random as _random
+                self._key_idx = _random.randrange(len(self._keys))
+            else:
+                self._key_idx = 0
             self._key_cooldown: dict[int, float] = {}   # key index -> unix time it becomes usable again
             self._base_url = os.getenv("OPENAI_BASE_URL") or None
             self.client = openai.OpenAI(api_key=self._keys[self._key_idx], base_url=self._base_url, timeout=120.0,
