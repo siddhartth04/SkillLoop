@@ -20,4 +20,3 @@ qa/he_scratch/
 qa/lib*/
 qa/scratch/
 qa/state*.json
-qa/conv_eval/results/
