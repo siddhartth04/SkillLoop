@@ -157,19 +157,24 @@ from a random seed, so the model cannot know it and cannot have memorized it.
 Protocol ([`qa/conv_eval/PROTOCOL.md`](qa/conv_eval/PROTOCOL.md)) was **fixed before any model ran** — gates,
 metrics, statistical test and the exact verdict wording. Model: `openai/gpt-oss-120b`, temperature 0.
 
-| Condition | Solved (2 attempts) | vs control (paired) |
-|:--|:--:|:--:|
-| Control (docs only) | 3/18 = 17% | — |
-| Control, repeated *(null check)* | 5/18 = 28% | — |
-| Simple memory *(raw past attempts)* | 10/18 = 56% | 7–0, p = 0.016 |
-| **SkillLoop** | **11/18 = 61%** | **8–0, p = 0.008** |
-| Oracle *(perfect notes)* | 18/18 = 100% | — |
+| Condition | Seed 2 | Seed 4 | Pooled (n=36) | vs control |
+|:--|:--:|:--:|:--:|:--:|
+| Control (docs only) | 3/18 | 4/18 | 7/36 = 19% | — |
+| Control, repeated *(null check)* | 5/18 | 5/18 | 10/36 = 28% | — |
+| Simple memory *(raw past attempts)* | 10/18 | 11/18 | 21/36 = 58% | 14–0, p = 0.0001 |
+| **SkillLoop** | 11/18 | **13/18** | **24/36 = 67%** | **17–0, p = 0.00002** |
+| Oracle *(perfect notes)* | 18/18 | 18/18 | 36/36 = 100% | — |
 
-**SkillLoop beats control (p = 0.008). It does *not* beat simple memory (4–3, p = 1.0).**
+**SkillLoop beats control on both seeds, 17–0 across 36 paired tasks (p = 0.00002). It still does *not*
+significantly beat simple memory (6–3, p = 0.51).**
 
 That is the pre-registered verdict, reported as written: *"SkillLoop helps, but its extra machinery is not yet
-justified over simple memory."* Three of four seeds were **excluded by their own gates** before SkillLoop ran
-on them, leaving n = 18 — one seed. This is a single-seed result, not a settled one.
+justified over simple memory."* It has now survived a second seed. Two seeds agreeing in direction is worth
+more than one, but 6–3 at n = 36 is not a result, and the honest reading is unchanged.
+
+Seed 4 was the first run in which the gate both promoted and rejected: five skills reached `active` by passing
+an independent re-run, four were quarantined for failing one. It also reached **67% first-attempt** success
+against memory's 28% — in seed 2 most wins arrived only after an error triggered recall.
 
 **Why it came out that way** matters more than the score. Splitting the same 18 tasks by what the *training
 feedback* revealed separates them cleanly:

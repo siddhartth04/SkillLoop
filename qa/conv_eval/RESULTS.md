@@ -11,9 +11,49 @@ Protocol: `PROTOCOL.md`, fixed before any model run. Raw data: `results/`.
 | 1 | 83% | 50% | 100% | 0 | **No** (null < 85%) |
 | 2 | 89% | 17% | 100% | 0 | **Yes** |
 | 3 | 82% (14/17) | 50% | not run | 0 | **No** (null < 85%, cannot recover) |
+| 4 | 94% | 22% | 100% | 0 | **Yes** |
 
 Seed 3 passed its null gate (89%) in an earlier run that was lost when the process was stopped; the saved rerun
 failed it. The gate sits near this model's own run-to-run noise.
+
+## Two valid seeds, pooled (36 held-out trap tasks)
+
+Seed 4 was run after four bugs were found and fixed that had each invalidated an earlier attempt (see
+`CALIBRATION.md`, 2026-09-25). It is the first run in which the verification gate both promoted and rejected:
+five skills reached `active` by passing an independent re-run, four were quarantined for failing one.
+
+| Condition | Seed 2 | Seed 4 | Pooled | vs control (pooled) |
+|---|---|---|---|---|
+| Control | 3/18 | 4/18 | 7/36 = 19% | — |
+| Control, repeated | 5/18 | 5/18 | 10/36 = 28% | — |
+| Simple memory | 10/18 | 11/18 | 21/36 = 58% | 14–0, p = 0.00012 |
+| **SkillLoop** | 11/18 | **13/18** | **24/36 = 67%** | **17–0, p = 0.00002** |
+| Oracle | 18/18 | 18/18 | 36/36 = 100% | — |
+
+**SkillLoop beats the no-memory control on both seeds, with zero losses across 36 paired tasks (p = 0.00002).**
+
+**It still does not significantly beat simple memory: 6–3, p = 0.51.** That is the pre-registered verdict and
+it has now survived a second seed. Two seeds agreeing in direction is worth more than one, but 6–3 at n = 36
+is not a result, and the honest reading is unchanged: the extra machinery is not yet justified over pasting
+past attempts into the prompt.
+
+Seed 4 did show one clear improvement over seed 2: **first-attempt** success rose from 22% to 67%, overtaking
+memory (28%). In seed 2 most wins arrived only after an error triggered recall; in seed 4 the skills were
+useful before the agent made a mistake.
+
+### The combined condition, tested for the first time
+
+Seed 2 suggested skills and raw memory solve *different* conventions, so a condition with both was
+pre-registered and run on seed 4. It did not help: **12/18, below SkillLoop's 13/18** (0–1 against it, 1–0
+against memory). One seed, so this is weak evidence either way, but the additive effect seed 2 hinted at did
+not appear.
+
+### What the gate rejected, and why that matters
+
+`lookup-config-option` was quarantined. Its procedure had improved — it now says to *read the docs or source*
+rather than asserting a key outright, which is what the UNKNOWN VALUES rule asks for — but its verification
+bullet still hardcoded `'retries'` when the real key is `MAX-RETRIES`. The independent re-run failed and the
+skill never reached the agent. A wrong skill rejected rather than served is the gate doing its job.
 
 ## Primary result (seed 2, 18 held-out trap tasks)
 
