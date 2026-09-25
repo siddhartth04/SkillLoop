@@ -360,3 +360,30 @@ def test_process_stops_and_says_so_when_the_quota_runs_out(loop):
     assert any("quota_exhausted" in str(r) for r in report)
     assert loop.store.pending_traces(99), "traces must stay queued for a later run, not be dropped"
     assert [w for w in caught if "stopped processing" in str(w.message)], "the stop must be announced"
+
+
+def test_an_independent_check_is_not_overruled_by_a_model_judge(loop):
+    """verified_by() is the strongest evidence the gate has. A model must not veto it.
+
+    record_host_eval() re-graded a passing re-run with an assertion judge. In the seed-4 conventions run all
+    twelve re-runs that PASSED their hidden checker were vetoed anyway - the judge called the trajectory too
+    thin, because a promotion re-run is deliberately one step - and every one of the eight learned skills was
+    quarantined. The gate's own premise is that a real check beats an opinion, so a trace carrying a "test"
+    signal is now authoritative.
+    """
+    run_agent(loop, "install pandas and build the weekly report")
+    loop.process()
+
+    def thin_but_verified(task, skill_md):
+        s = loop.session(task, auto_learn=False)
+        s.tool("python", {"code": "x = 1"}, result="ok")      # deliberately minimal
+        return s.verified_by(0)                                # an independent checker says it passed
+
+    loop.run_pending_evals(thin_but_verified)
+    while loop.store.pending_traces(1):
+        loop.process()
+
+    assert learned(loop)["verify-pip-install"] == "active", (
+        "a re-run whose independent check passed must reach active, however thin the trajectory")
+    failed = loop.store.db.execute("SELECT COUNT(*) FROM evals WHERE status='failed'").fetchone()[0]
+    assert failed == 0, "no host eval should fail when the checker passed"

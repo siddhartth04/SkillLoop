@@ -138,7 +138,10 @@ def test_full_loop(loop):
     res = loop.learn(passing_trace(eval_id=ev["id"]))
     assert loop.store.get_skill("verify-pip-install").status == "active"
     e = loop.store.get_eval(ev["id"])
-    assert e.status == "passed" and e.result["assertion_judge"]["overall"] == "pass"
+    # The trace carries a "test" signal, i.e. an independent check already decided it. The gate takes that
+    # as authoritative and does not spend a model call re-grading it - a judge must not overturn a checker.
+    assert e.status == "passed" and e.result["externally_verified"] is True
+    assert "assertion_judge" not in e.result
     assert loop.store.get_skill("verify-pip-install").trigger_precision == 1.0
 
     # 5. later failure WITH the skill -> blame -> patch -> v2, re-gated, no longer provisional

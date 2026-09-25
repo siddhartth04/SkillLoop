@@ -63,6 +63,7 @@ class Session:
         self._outcome: str | None = None
         self._detail = ""
         self._confidence = 0.9
+        self._verified_externally = False
         self.trace: Trace | None = None
         self.result: dict | None = None
         self.started = time.time()
@@ -176,13 +177,17 @@ class Session:
             passed = check
         else:
             passed = (check == 0)
+        self._verified_externally = True     # the verdict came from a checker, not from the agent
         return self.ok(detail or "checker passed") if passed else self.fail(detail or "checker failed")
 
     # ---------------- lifecycle ----------------
     def build(self) -> Trace:
         signals = []
         if self._outcome:
-            signals.append(Signal("session", self._outcome, self._confidence, self._detail[:300]))
+            # "test" marks a verdict that came from an independent check (verified_by), as opposed to the
+            # agent's own report. The gate treats it as authoritative: a model must not overturn a checker.
+            src = "test" if self._verified_externally else "session"
+            signals.append(Signal(src, self._outcome, self._confidence, self._detail[:300]))
         meta = dict(self.metadata)
         if self.hint_log:
             meta["error_hints"] = self.hint_log

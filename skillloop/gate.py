@@ -210,7 +210,13 @@ def record_host_eval(store: Store, ev: Eval, trace: Trace, llm: LLM | None = Non
     are judged against the new trajectory when a model is available."""
     passed = trace.outcome == "success" and trace.confidence >= 0.5
     ev.result = {"trace_id": trace.id, "outcome": trace.outcome, "confidence": trace.confidence}
-    if passed and llm is not None and ev.assertions:
+    # An independent check (Session.verified_by -> a "test" signal) is the strongest evidence available, and
+    # it is the whole point of the gate. Asking a model to re-grade that trajectory can only overturn a real
+    # checker with an opinion: in the seed-4 run every one of the twelve re-runs that PASSED its hidden
+    # checker was vetoed by the judge for a "too thin" trajectory, and all eight skills were quarantined.
+    externally_verified = any(sig.source == "test" for sig in (trace.signals or []))
+    ev.result["externally_verified"] = externally_verified
+    if passed and not externally_verified and llm is not None and ev.assertions:
         try:
             raw = llm.json(HOST_JUDGE_SYSTEM, f"--- TASK ---\n{ev.task}\n\n--- ASSERTIONS ---\n"
                            + "\n".join(f"- {a}" for a in ev.assertions)
