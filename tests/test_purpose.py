@@ -5,6 +5,7 @@ install worked. When a skill telling it to verify is in its context, it follows 
 (learning, gating, recall at task start, recall at error time, promotion) is the real SkillLoop pipeline.
 """
 import tempfile
+import time
 import warnings
 
 import pytest
@@ -387,3 +388,47 @@ def test_an_independent_check_is_not_overruled_by_a_model_judge(loop):
         "a re-run whose independent check passed must reach active, however thin the trajectory")
     failed = loop.store.db.execute("SELECT COUNT(*) FROM evals WHERE status='failed'").fetchone()[0]
     assert failed == 0, "no host eval should fail when the checker passed"
+
+
+def test_a_daily_capped_key_is_parked_not_fatal():
+    """A daily cap is per key (per organization); the pool as a whole may still have budget.
+
+    Seed 5 stopped mid-training with seven of eight keys still usable, because the first daily 429 raised
+    QuotaExhausted straight away. That was right for a single key and wrong for a pool: eight keys across
+    eight accounts are eight separate daily quotas. The capped key is now parked until the provider's reset
+    and the run continues on the next key; QuotaExhausted is raised only when every key is spent.
+    """
+    from skillloop.llm import LLM, QuotaExhausted
+
+    DAILY = "Rate limit reached in organization `org_x` on tokens per day (TPD): Limit 200000, Used 199999"
+
+    class Pool(LLM):
+        def __init__(self, capped):
+            self.provider, self.model = "openai", "m"
+            self._keys, self._key_idx, self._key_cooldown = ["k1", "k2", "k3"], 0, {}
+            self.capped, self.tried = capped, []
+            self.client = type("C", (), {"api_key": "k1"})()
+
+        def _complete(self, *a, **k):
+            key = self._keys[self._key_idx]
+            self.tried.append(key)
+            if key in self.capped:
+                raise RuntimeError(DAILY)
+            return "ok"
+
+        def _rotate_key(self, cooldown):
+            now = time.time()
+            self._key_cooldown[self._key_idx] = now + cooldown
+            for j in range(len(self._keys)):
+                if self._key_cooldown.get(j, 0) <= now:
+                    self._key_idx = j
+                    return True
+            return False
+
+    partly = Pool({"k1", "k2"})
+    assert partly.complete("s", "u") == "ok", "must fall through to the key that still has budget"
+    assert partly.tried == ["k1", "k2", "k3"]
+
+    everything = Pool({"k1", "k2", "k3"})
+    with pytest.raises(QuotaExhausted):
+        everything.complete("s", "u")

@@ -139,11 +139,16 @@ class LLM:
                 return self._complete(system, user, max_tokens, temperature, role)
             except Exception as e:
                 if _is_daily_quota(str(e)):
-                    # Fail fast and say why: retrying a daily cap cannot succeed, and the silence is what
-                    # makes it look like a hung process rather than an exhausted account.
+                    # A daily cap is per KEY (per organization, for Groq), not per pool. Retrying the same
+                    # key cannot succeed, but another key in the pool usually belongs to a different account
+                    # and still has budget - eight keys across eight orgs is eight separate daily quotas.
+                    # Park this key until tomorrow and move on; only give up when every key is spent.
+                    if self._rotate_key(cooldown=_DAY_SECONDS):
+                        continue
                     raise QuotaExhausted(
-                        f"{self.provider} daily quota exhausted for model {self.model!r}; this is not a "
-                        f"transient rate limit and retrying will not help. Provider said: {str(e)[:200]}"
+                        f"{self.provider} daily quota exhausted for model {self.model!r} on ALL "
+                        f"{len(self._keys)} key(s); this is not a transient rate limit and retrying will not "
+                        f"help until the provider's daily reset. Provider said: {str(e)[:200]}"
                     ) from e
                 wait, exact = _retry_after(e)
                 if wait is None or attempt == self.max_retries:
@@ -268,6 +273,9 @@ def _request_timeout() -> float:
         return max(5.0, float(os.getenv("SKILLLOOP_TIMEOUT", "90")))
     except ValueError:
         return 90.0
+
+
+_DAY_SECONDS = 24 * 60 * 60      # park a daily-capped key until the provider resets
 
 
 class QuotaExhausted(RuntimeError):

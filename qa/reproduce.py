@@ -34,14 +34,14 @@ def head(t: str) -> None:
 
 
 def run_tests() -> None:
-    head("1. Test suite (README badge: 112 passing)")
+    head("1. Test suite (README badge: 113 passing)")
     p = subprocess.run([sys.executable, "-m", "pytest", "tests", "-q", "-p", "no:cacheprovider",
                         "--collect-only"], cwd=ROOT, capture_output=True, text=True)
     n = 0
     for line in p.stdout.splitlines():
         if "tests collected" in line or "test collected" in line:
             n = int(line.split()[0])
-    check("tests", "tests collected", n, 112)
+    check("tests", "tests collected", n, 113)
 
 
 def run_retrieval() -> None:
