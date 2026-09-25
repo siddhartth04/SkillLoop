@@ -16,6 +16,25 @@ Protocol: `PROTOCOL.md`, fixed before any model run. Raw data: `results/`.
 Seed 3 passed its null gate (89%) in an earlier run that was lost when the process was stopped; the saved rerun
 failed it. The gate sits near this model's own run-to-run noise.
 
+## Noted before seed 5's result was known
+
+Seed 5 passed its gates (null 88.9%, control 44.4%, oracle 100%, 0 harness errors) and is the third valid
+seed. Its **baseline is roughly twice as strong** as the other two — control 44% against 17% (seed 2) and 22%
+(seed 4) — and the reason is visible in the generated quirk sets:
+
+| Seed | Active conventions | control |
+|---|---|---|
+| 2 | cents, commit, inplace, **keys**, tuple, **units** | 17% |
+| 4 | cents, index, **keys**, range, tuple, **units** | 22% |
+| 5 | cents, commit, desc, index, range, tuple | **44%** |
+
+Seed 5 is the only one drawn without `keys` or `units`, and those are exactly the two conventions where the
+baseline scored **0/3 on both earlier seeds**. Less headroom means a smaller margin is available to any
+method, so a weaker-looking improvement on this seed would be expected even if nothing changed.
+
+This is written down *before* the seed-5 numbers exist, so that whichever way it lands it cannot be explained
+after the fact.
+
 ## Two valid seeds, pooled (36 held-out trap tasks)
 
 Seed 4 was run after four bugs were found and fixed that had each invalidated an earlier attempt (see
