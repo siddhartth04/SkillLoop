@@ -16,6 +16,37 @@ Protocol: `PROTOCOL.md`, fixed before any model run. Raw data: `results/`.
 Seed 3 passed its null gate (89%) in an earlier run that was lost when the process was stopped; the saved rerun
 failed it. The gate sits near this model's own run-to-run noise.
 
+## Cost, measured for the first time — and it is the wrong way round
+
+Accuracy alone cannot separate a method that wins by *compressing* experience from one that wins by pasting
+all of it, so episodes now record how much context each condition puts in front of the agent. Measured on the
+seed-2 library:
+
+| | context per task |
+|---|---|
+| simple memory (every training attempt, capped) | ~8,000 chars |
+| the raw training episodes it was distilled from | ~5,600 chars |
+| **SkillLoop (3 retrieved skills, mean 3,298 chars each)** | **~9,900 chars** |
+
+**A learned skill is larger than the episodes it was learned from.** Seven skills averaging 3,298 characters
+were distilled from 5,600 characters of training attempts, and `recall(limit=3)` injects roughly 9,900 - more
+than the baseline it is competing with.
+
+This inverts the argument for the architecture. The case for paying ~7 model calls per trace is that a skill
+compresses many episodes into a reusable rule, so it scales where raw context cannot. At this size it does
+not compress at all: it expands. The synthesis prompt asks for preconditions, procedure, verification,
+failure modes and scope limits, and gets a document, not a rule.
+
+So the honest reading of "SkillLoop does not significantly beat simple memory" is worse than underpowered
+statistics. On this benchmark it also costs more context to achieve it. Two things follow, and both are
+testable:
+
+- **The skills are too long.** A rule the agent can act on ("timeouts are milliseconds: probe with
+  `new_job('x', 1)` and read `_eff()`") is one or two lines. Most of the 3,298 characters are scaffolding.
+- **The compression claim needs a regime where it can be true.** With 18 episodes there is nothing to
+  compress. The experiment that would settle it trains on hundreds of episodes, where raw context overflows
+  and a rule does not.
+
 ## What three runs say about the architecture, not just the score
 
 Measured across the seed-4 and seed-5 pipelines:
