@@ -20,3 +20,9 @@ qa/he_scratch/
 qa/lib*/
 qa/scratch/
 qa/state*.json
+
+# API keys must never enter the repository, even by accident
+*.key
+.groq_keys
+*_keys.txt
+seed*.log

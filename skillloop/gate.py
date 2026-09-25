@@ -232,11 +232,48 @@ def record_host_eval(store: Store, ev: Eval, trace: Trace, llm: LLM | None = Non
     return passed
 
 
+BLAME_SYSTEM = """A skill was followed and the task still failed. Find which bullet is at fault.
+
+You get the skill's bullets (each with an id) and the failed trajectory. Return ONLY the ids of bullets the
+trajectory shows to be WRONG - a value that turned out to be different, a step that did not do what it
+claimed, a check that passed while the task failed. A bullet that is merely unhelpful is not wrong.
+
+Return [] when the trajectory does not implicate any specific bullet: a skill can fail because the task was
+different, and blaming a bullet then destroys correct knowledge.
+
+JSON: {"wrong_bullet_ids": [str], "why": str}"""
+
+
+def blame_bullets(llm, skill: Skill, trace: Trace) -> list[str]:
+    """Which bullets does a failed re-run implicate? Empty when nothing is clearly at fault.
+
+    A quarantined skill is usually not wholly wrong. In the seed-4 run `lookup-config-option` correctly said
+    to read the configuration back instead of assuming a key name, and separately hardcoded the wrong key;
+    the whole skill was discarded. Per-bullet blame lets refine() prune the bad bullet and keep the rest.
+    """
+    if llm is None or not skill.bullets:
+        return []
+    listing = "\n".join(f"[{b['id']}] ({b.get('section')}) {b.get('content','')[:200]}"
+                        for b in skill.bullets)
+    try:
+        raw = llm.json(BLAME_SYSTEM,
+                       "--- BULLETS ---\n" + listing + "\n\n--- FAILED TRAJECTORY ---\n" + trace.compact(4000),
+                       role="judge")
+    except Exception:
+        return []                      # blame is a bonus; never fail the gate over it
+    ids = {b["id"] for b in skill.bullets}
+    return [i for i in (raw.get("wrong_bullet_ids") or []) if i in ids]
+
+
 class Policy:
     """Promotion / demotion thresholds. Tune per deployment."""
     min_host_successes_for_active = 1     # real successful uses required to go candidate -> active
     demote_below_hit_rate = 0.4           # active skill with hit rate below this (and enough uses) -> quarantine
     demote_min_uses = 4
+    # A failed host eval is evidence, not a verdict. A skill that passed three re-runs and failed one is
+    # worth more than no skill; quarantining it on the single failure discards the hit rate already tracked.
+    quarantine_below_hit_rate = 0.5       # host-eval hit rate under which a failure means quarantine
+    quarantine_min_evidence = 2           # ...but only once there are enough evals to judge a rate at all
     retire_after_days = 60
     max_active = 200
     # v0.2

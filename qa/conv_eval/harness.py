@@ -107,6 +107,11 @@ class Episode:
     attempts: list[dict] = field(default_factory=list)   # {"code","verdict"}
     harness_error: str = ""
     hints_shown: list[str] = field(default_factory=list)
+    # Characters of CONTEXT this condition put in front of the agent, summed over its attempts. Accuracy
+    # alone cannot separate a method that wins by compressing experience from one that wins by pasting all
+    # of it: the memory baseline sees every past attempt, while a skill is the lesson drawn from them. The
+    # survey literature notes this is the axis agent-memory benchmarks routinely fail to report.
+    context_chars: int = 0
 
     @property
     def success(self) -> bool:
@@ -136,6 +141,8 @@ def run_episode(agent, suite: Suite, task: Task, condition: str, context: str = 
     code, feedback, extra = "", "", ""
     for _ in range(max_attempts):
         user = prompt_for(suite, task, context + ("\n\n" + extra if extra else ""), feedback, code)
+        # count only the CONDITION's context, not the shared API doc or the task text
+        ep.context_chars += len(context) + len(extra)
         try:
             raw = agent.complete(SYSTEM, user, max_tokens=MAX_TOKENS, temperature=0.0, role="agent")
             code = extract_code(raw)

@@ -201,10 +201,35 @@ class SkillLoop(RetrievalMixin):
                         notes.append(f"{s.name}: host eval passed but stays candidate ({why})")
                     self.store.save_skill(s, snapshot=False)
                 elif s and not passed:
-                    s.status = "quarantine"
+                    # Judge the skill on its record, not on this one eval. Seed 5 quarantined a skill that
+                    # had passed its re-run three times and failed once; the store was already tracking that
+                    # 3-1 record and nothing consulted it.
+                    # Blame the bullet, not the skill. A failed re-run usually implicates one wrong step,
+                    # and discarding the whole skill throws away the parts that were right: seed 4's
+                    # lookup-config-option correctly said to read the config back AND hardcoded the wrong
+                    # key, and the whole thing was dropped.
+                    blamed = gate.blame_bullets(self._llm, s, t)
+                    if blamed:
+                        if not s.bullets:
+                            s.bullets = parse_body(s.body)
+                        record_feedback(s.bullets, [], blamed)
+                        s.bullets, _ = refine(s.bullets)
+                    tried = s.successes + s.failures
+                    rate = (s.successes / tried) if tried else 0.0
+                    unreliable = (tried >= self.policy.quarantine_min_evidence
+                                  and rate < self.policy.quarantine_below_hit_rate)
+                    if unreliable or tried < self.policy.quarantine_min_evidence:
+                        s.status = "quarantine"
+                        why = f"host eval {ev.id} failed ({s.successes}/{tried} passed)"
+                    else:
+                        # mostly works: still retrievable, but no longer presented as verified
+                        s.status = "candidate"
+                        why = f"host eval {ev.id} failed but record is {s.successes}/{tried}; back to candidate"
                     self.store.save_skill(s, snapshot=False)
-                    self.store.log("demote", s.name, f"host eval {ev.id} failed")
-                    notes.append(f"{s.name}: -> quarantine (host eval failed)")
+                    if blamed:
+                        why += f"; pruned bullets {blamed[:3]}"
+                    self.store.log("demote", s.name, why)
+                    notes.append(f"{s.name}: -> {s.status} ({why})")
         self.store.log("learn", t.id, f"{t.outcome} ({t.confidence:.2f}) {t.task[:80]}")
         self.store.metric("episode_success", 1.0 if t.outcome == "success" else 0.0)
         obs.log("learn.queued", trace_id=t.id, outcome=t.outcome, request_id=obs.current_request_id())

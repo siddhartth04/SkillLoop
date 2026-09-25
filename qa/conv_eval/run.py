@@ -61,8 +61,12 @@ def rate(eps: dict[str, Episode], ids: list[str], first=False) -> dict:
     ok = [e for i, e in eps.items() if i in ids and not e.harness_error]
     k = sum((e.first_try if first else e.success) for e in ok)
     lo, hi = wilson(k, len(ok))
+    ctx = [getattr(e, "context_chars", 0) for e in ok]
     return {"k": k, "n": len(ok), "rate": round(k / len(ok), 3) if ok else None,
             "ci95": [round(lo, 2), round(hi, 2)],
+            # Cost, alongside accuracy. A method that matches another on a fraction of the context is better
+            # even at equal accuracy, and this is the axis agent-memory benchmarks routinely omit.
+            "mean_context_chars": round(sum(ctx) / len(ctx)) if ctx else 0,
             "harness_errors": sum(1 for i, e in eps.items() if i in ids and e.harness_error)}
 
 
@@ -299,6 +303,10 @@ def print_report(r):
     print("\nPrimary: success within 2 attempts on held-out TRAP tasks")
     for k, v in r["primary"].items():
         print(f"  {k:<15} {v['k']}/{v['n']} = {v['rate']}  CI95 {v['ci95']}  harness errors: {v['harness_errors']}")
+    print("Context cost (mean chars of condition context per task):")
+    for k, v in r["primary"].items():
+        n = v.get("mean_context_chars", 0)
+        print(f"  {k:<15} {n:>7,}")
     print("First-try success:", {k: v["rate"] for k, v in r["first_try"].items()})
     print("No-trap tasks (harm check):", {k: v["rate"] for k, v in r["harm_notrap"].items()})
     print("Paired:", json.dumps(r["paired"]))
