@@ -16,6 +16,42 @@ Protocol: `PROTOCOL.md`, fixed before any model run. Raw data: `results/`.
 Seed 3 passed its null gate (89%) in an earlier run that was lost when the process was stopped; the saved rerun
 failed it. The gate sits near this model's own run-to-run noise.
 
+## What three runs say about the architecture, not just the score
+
+Measured across the seed-4 and seed-5 pipelines:
+
+| | seed 4 | seed 5 |
+|---|---|---|
+| traces learned from | 18 | 18 |
+| candidate skills produced | 9 | 6 |
+| skills reaching `active` | 5 | 2 |
+| **yield (traces -> usable skill)** | **14%** | **6%** |
+| model calls spent learning | ~126 | ~126 |
+| **calls per usable skill** | **~25** | **~63** |
+
+The pipeline costs about **7 model calls per trace** (outcome judge, reflect, skeptic, three synthesis calls,
+gate judge), and most of what it produces is discarded at the gate. The baseline it is measured against —
+pasting past attempts into the prompt — costs **zero** model calls.
+
+That framing matters more than the 9-point accuracy gap. The question is not "does the pipeline help" but
+"does it help enough to justify 126 calls and a 6-14% yield", and on this benchmark the honest answer is no.
+
+Three specific design issues follow from the numbers:
+
+1. **Quarantine discards partial knowledge.** `lookup-config-option` (seed 4) correctly said to read the
+   config back rather than assume a key, and separately hardcoded the wrong key name. The whole skill was
+   thrown away. `refine()` and per-bullet helpful/harmful counters already exist; the gate does not use them
+   to repair a skill, only to accept or reject it.
+2. **Promotion is binary on a single failure.** `charge-int-cents` (seed 5) passed its re-run three times and
+   failed once, and was quarantined. `hit_rate`, `successes` and `failures` are all tracked and none of them
+   inform the decision.
+3. **The cheap mechanism is buried in the expensive one.** Error-time symptom matching is the part the data
+   most supports (seed 2: 5/9 against memory's 1/9 where the training feedback never revealed the answer). It
+   needs a recorded symptom and a string match, not reflection and synthesis, and could run at roughly one
+   call per failed trace instead of seven.
+
+None of this is visible in the accuracy numbers alone, which is why it is recorded here next to them.
+
 ## Noted before seed 5's result was known
 
 Seed 5 passed its gates (null 88.9%, control 44.4%, oracle 100%, 0 harness errors) and is the third valid
