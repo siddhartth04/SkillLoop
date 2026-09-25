@@ -3,6 +3,40 @@
 Run `skillloop calibrate` whenever you change a model or a prompt. This file records what past runs found and
 what changed because of them, so the prompts have a paper trail.
 
+## 2026-09-25 (evening) — the gate overruling its own evidence
+
+**The eighth self-caught false positive, and the subtlest.**
+
+With the encoding, self-feeding and quota bugs fixed, seed 4 ran cleanly: 18 traces learned, 8 skills built,
+no errors. The promotion re-runs reported twelve successes and six failures against the hidden checker. Then:
+
+```
+skills learned: {'verify-function-signature-units': 'quarantine',
+                 'inspect-returned-object': 'quarantine', ... }   # all eight
+```
+
+A skill whose re-run passed 3/3 was quarantined. The eval table showed the giveaway: **18 judge evals passed,
+18 host evals failed** — a perfect split, again.
+
+`record_host_eval()` re-grades a passing re-run with an assertion judge, and the judge can veto it. Its
+verdict here was fair on its own terms:
+
+> *"The trajectory shows only a single call to bruzem.at with an assumed index conversion; no minimal
+> verification step."*
+
+The trajectory IS one step: a promotion re-run deliberately runs the task once and grades it with the task's
+hidden checker. So the judge was being asked to second-guess a real check using a trajectory that was never
+meant to satisfy it, and every genuine pass was overturned.
+
+This inverts the gate's own premise. The project's claim is that *a skill is a hypothesis until a test
+agrees* — not until a model agrees. `Session.verified_by()` now records a `"test"` signal, and
+`record_host_eval()` treats that as authoritative; the judge still runs when the only evidence is the agent's
+own word about its own work.
+
+**What makes this the subtlest of the three:** the other two produced obviously broken states (skills missing,
+traces doubling). This one produced a report that looked like *diligence* — a strict gate rejecting weak
+skills — which is exactly what a reader hoping for rigour would want to believe.
+
 ## 2026-09-25 (later still) — a daily quota that looked like a hung process
 
 **Not a false positive: a false *nothing*.** The run simply stopped, and nothing said why.
