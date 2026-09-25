@@ -115,6 +115,15 @@ def main(seed: int, state: Path = STATE):
     rep["episodes"] = {k: {i: vars(e) for i, e in v.items()} for k, v in r.items()} if g["pass"] else {}
     OUT.mkdir(exist_ok=True)
     (OUT / f"full-seed{seed}.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
+    # Copy the per-episode caches next to the report. They live in the state directory while the run is
+    # resumable, but analyze.py and anyone auditing the result need them committed alongside it - without
+    # them the training-feedback split silently reports "no training episodes" and the most informative
+    # part of the analysis disappears.
+    ep_out = OUT / f"seed{seed}_episodes"
+    ep_out.mkdir(exist_ok=True)
+    for src in sorted(d.glob("*.jsonl")):
+        (ep_out / src.name).write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    print(f"episodes archived to {ep_out}")
     print_report(rep)
     print("DONE", flush=True)
     return rep

@@ -65,6 +65,11 @@ def analyse(path: Path) -> None:
         return
     seed = list(d.get("per_seed", {}))[0] if d.get("per_seed") else "?"
     ep_dir = HERE / "results" / f"seed{seed}_episodes"
+    if not (ep_dir / "train.jsonl").exists():
+        # a run that has not been archived yet still has its episodes in the resumable state directory
+        fallback = Path("/home/claude/conv_state") / f"seed{seed}"
+        if (fallback / "train.jsonl").exists():
+            ep_dir = fallback
     info = informative_conventions(ep_dir)
     conds = [c for c in ("control", "memory", "skillloop", "combined") if c in eps]
     trap = [t for t in eps["control"] if "-notrap" not in t]
