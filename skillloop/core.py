@@ -22,10 +22,11 @@ from .playbook import parse_body, record_feedback, refine
 from .llm import LLM
 from .safety import sanitize_trace
 from .schema import Trace, normalize
+from .retrieval import RetrievalMixin
 from .store import Skill, Store
 
 
-class SkillLoop:
+class SkillLoop(RetrievalMixin):
     def __init__(self, home: str | None = None, llm: LLM | None = None, policy: gate.Policy | None = None,
                  min_tool_calls_to_learn: int = 2, auto_process: bool = False):
         obs.configure_logging()
@@ -44,7 +45,10 @@ class SkillLoop:
         self.hybrid_embed_w = float(os.getenv("SKILLLOOP_HYBRID_EMBED_W", "0.5"))
         self.query_threshold = float(os.getenv("SKILLLOOP_QUERY_THRESHOLD", "0.3"))
         self.duplicate_threshold = float(os.getenv("SKILLLOOP_DUPLICATE_THRESHOLD", "0.75"))
-        if auto_process:
+        # cosine at which an embedding match fires without lexical anchor overlap (paraphrase rescue)
+        self.embed_strong = float(os.getenv("SKILLLOOP_EMBED_STRONG", "0.62"))
+        self._warned_unprocessed = False
+        if auto_process or os.getenv("SKILLLOOP_AUTO_PROCESS", "").lower() in ("1", "true", "yes"):
             self.start_worker()
 
     @property
@@ -60,6 +64,30 @@ class SkillLoop:
         If principles exist, the first entry is the PRINCIPLES block (name="_principles")."""
         statuses = ("active", "candidate") if include_candidates else ("active",)
         hits = self._search(task, statuses, limit)
+        out = self._format_hits(hits, include_principles)
+        obs.log("recall", task=task[:80], hits=[h["name"] for h in out if h.get("name") != "_principles"])
+        return out
+
+    def recall_for_error(self, error: str, task: str = "", limit: int = 3, include_candidates: bool = True,
+                         exclude: list[str] | tuple[str, ...] = ()) -> list[dict[str, Any]]:
+        """Skills relevant to an error the agent is looking at RIGHT NOW. Fast, local, no LLM.
+
+        Mistakes rarely announce themselves in the task description; they show up mid-task as an error.
+        This matches the error's signature against each skill's recorded symptoms (the literal error text of
+        the failure the skill was learned from), plus the task for context. Principles are not repeated here;
+        they were shown at the start. `exclude` drops skills the agent already has in its prompt.
+        """
+        sig = self._error_signature(error)
+        if not sig:
+            return []
+        statuses = ("active", "candidate") if include_candidates else ("active",)
+        hits = self._search((sig + "\n" + (task or "")).strip(), statuses, limit + len(exclude), mode="error")
+        hits = [(s, sc) for s, sc in hits if s.name not in set(exclude)][:limit]
+        out = self._format_hits(hits, include_principles=False)
+        obs.log("recall_error", error=sig[:80], hits=[h["name"] for h in out])
+        return out
+
+    def _format_hits(self, hits, include_principles: bool) -> list[dict[str, Any]]:
         out = []
         if include_principles:
             ptxt = self.store.principles_text()
@@ -80,298 +108,46 @@ class SkillLoop:
                 "path": str(self.store.skills_dir / s.name / "SKILL.md"),
             })
         self.store.bump_recalls([s.name for s, _ in hits])
-        obs.log("recall", task=task[:80], hits=[h["name"] for h in out if h.get("name") != "_principles"])
         return out
 
-    # ------------------------------------------------------------------ retrieval
-    _STOP = {
-        "the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "with", "from", "into", "that", "this",
-        "then", "it", "its", "is", "are", "be", "you", "your", "use", "using", "used", "make", "made", "get",
-        "put", "set", "run", "runs", "running", "create", "creates", "created", "creating", "write", "writes",
-        "writing", "written", "read", "reads", "reading", "file", "files", "output", "input", "value", "values",
-        "data", "line", "lines", "content", "contents", "result", "results", "task", "agent", "step", "steps",
-        "command", "commands", "check", "checks", "verify", "verifies", "ensure", "before", "after", "when",
-        "should", "must", "not", "no", "if", "any", "all", "new", "one", "two", "number", "numbers", "name",
-        "names", "text", "code", "directory", "folder", "path", "need", "needs", "want", "wants", "please",
-        "user", "here", "each", "every", "other", "others", "leaving", "alone", "keep", "kept", "also", "does",
-        "but", "was", "were", "never", "always", "only", "just", "still", "than", "both", "some", "can", "will",
-        "has", "have", "had", "did", "do", "done", "how", "why", "what", "which", "who", "there", "their",
-        "them", "they", "our", "out", "via", "per", "may", "might", "would", "could", "such", "same", "more",
-        "most", "less", "least", "very", "much", "many", "few", "now", "yet", "so", "up", "down", "over",
-        "under", "again", "once", "first", "last", "next", "prev", "previous", "current", "actually", "really",
-        "script", "scripts", "program", "programs", "python", "bash", "shell", "sh",
-        # Function words and generic instruction verbs. These matter most for FACET text: applies_when
-        # phrases are tokenised word-by-word and every token becomes an ANCHOR at weight 3.0, so a
-        # multi-word phrase donates its prepositions as anchors. Anchors are what prevent false fires, so a
-        # function word satisfying the anchor rule defeats the mechanism. Measured (qa/run_r1.py): the
-        # phrase "script lies about success" made "about" an anchor and "write a haiku about the sea"
-        # retrieved an exit-code skill; "explain analyze" made "explain" an anchor and "explain the plot of
-        # Hamlet" retrieved a Postgres skill.
-        "about", "between", "against", "during", "without", "within", "across", "among", "upon", "toward",
-        "explain", "describe", "difference", "differences", "instead", "rather", "whether", "regardless",
-    }
-
-    @classmethod
-    def _terms(cls, text: str) -> set[str]:
-        """Distinctive content words, with identifiers split into subtokens.
-
-        `test_tax.py` -> {test_tax.py, test, tax, py}. Without this, a query naming a concrete file never
-        matches a skill that talks about the concept ("tax calculation"), which is most real queries.
-        """
-        import re as _re
-        out: set[str] = set()
-        for raw in _re.findall(r"[A-Za-z0-9_.\-]{2,}", (text or "").lower()):
-            parts = [raw] + [p for p in _re.split(r"[_.\-]+", raw) if p]
-            for p in parts:
-                if len(p) >= 3 and p not in cls._STOP and not p.isdigit():
-                    out.add(p)
-        return out
-
-    def _profiles(self, statuses: tuple[str, ...]) -> list[tuple[Skill, dict[str, float], set[str]]]:
-        """What each skill is FOR - name, description, triggers, facets. Deliberately NOT the body: matching
-        on body text is what made a JSON skill fire on a CSV task (both mention 'file' and 'python').
-
-        Cached against Store.library_version: profiles depend only on the library, not the query, so an
-        unchanged library is not re-read and re-tokenised on every call. Rebuilding this per query was 81% of
-        recall() time at a 500-skill library (one SELECT per skill, plus tokenisation of every facet).
-        """
-        key = (tuple(sorted(statuses)), self.store.library_version)
-        cached = getattr(self, "_profiles_cache", None)
-        if cached is not None and cached[0] == key:
-            return cached[1]
-        trig = self.store.all_triggers()          # one query, not one per skill
-        out = []
-        for sk in self.store.all_skills():
-            if sk.status not in statuses:
-                continue
-            weighted: dict[str, float] = {}
-            anchors: set[str] = set()
-            fac = sk.facets or {}
-            fields = [
-                (sk.name.replace("-", " "), 3.0),
-                (" ".join(fac.get("applies_when", [])), 3.0),
-                (trig.get(sk.name, ""), 2.0),
-                (" ".join(fac.get("symptoms", [])), 2.0),
-                (sk.description, 1.0),
-            ]
-            for text, w in fields:
-                for t in self._terms(text):
-                    weighted[t] = max(weighted.get(t, 0.0), w)
-                    if w >= 3.0:
-                        anchors.add(t)
-            out.append((sk, weighted, anchors))
-        self._profiles_cache = (key, out)
-        self._idf_cache = None
-        return out
-
-    # Function words only. The facet stoplist strips domain vocabulary (script, run, output) because in a
-    # skill DESCRIPTION those words match everything. In a short user phrasing they carry the meaning:
-    # "make my script runnable" collapses to one token under the facet stoplist and stops matching anything.
-    _QUERY_STOP = {"the", "a", "an", "to", "in", "of", "my", "me", "i", "do", "does", "is", "it", "its", "how",
-                   "what", "why", "when", "and", "or", "for", "this", "that", "with", "can", "should", "would",
-                   "please", "need", "want", "on", "at", "be", "am", "are", "was", "were", "have", "has", "get",
-                   "there", "their", "from", "into", "some", "any", "all", "so", "if", "but", "not", "no"}
-
-    @classmethod
-    def _query_terms(cls, text: str) -> set[str]:
-        import re as _re
-        out: set[str] = set()
-        for raw in _re.findall(r"[A-Za-z0-9_.\-]{2,}", (text or "").lower()):
-            for p in [raw] + [x for x in _re.split(r"[_.\-]+", raw) if x]:
-                if len(p) >= 2 and p not in cls._QUERY_STOP and not p.isdigit():
-                    out.add(p)
-        return out
-
-    def _best_query_match(self, qt: set[str], sk: Skill) -> float:
-        """doc2query matching, done at PHRASE level.
-
-        Pooling every trigger query into one bag makes a skill with 10 queries match almost anything, because
-        a single shared word is enough. Instead each trigger query is compared on its own and we take the best:
-        the score is the fraction of THAT query's terms present in the task. "how many times does X appear"
-        only scores when most of it is there, so it stops firing on "make deploy.sh runnable".
-        """
-        best = 0.0
-        for q in sk.queries:
-            terms = self._query_terms(q)
-            if len(terms) < 2:
-                continue
-            shared = qt & terms
-            # one word in common is a coincidence, not a match ("project timeline" vs "add a dependency to the
-            # project"). Demand two shared terms unless the overlap is overwhelming.
-            if len(shared) < 2 and len(shared) / len(terms) < 0.6:
-                continue
-            best = max(best, len(shared) / len(terms))
-        return best
-
-    def _idf(self, profiles) -> dict[str, float]:
-        """IDF over the profile corpus. Cached alongside _profiles: it is a pure function of the library."""
-        cached = getattr(self, "_idf_cache", None)
-        if cached is not None and cached[0] is profiles:
-            return cached[1]
-        import math
-        n = len(profiles) or 1
-        df: dict[str, int] = {}
-        for _, prof, _a in profiles:
-            for t in prof:
-                df[t] = df.get(t, 0) + 1
-        out = {t: math.log(1 + n / c) for t, c in df.items()}
-        self._idf_cache = (profiles, out)
-        return out
-
-    def _search(self, task: str, statuses: tuple[str, ...], limit: int) -> list[tuple[Skill, float]]:
-        """IDF-weighted coverage over each skill's purpose, with abstention.
-
-        Score = (weighted IDF mass of query terms this skill covers) / (total IDF mass of the query).
-        A skill is only returned if it clears an absolute threshold AND matches at least one term that is
-        rare across the library - otherwise every skill wins on shared generic vocabulary.
-        """
-        qt = self._terms(task)
-        if not qt:
-            return []
-        # INTENT GATE (query-level): a creative or factual-question request is not a task any procedural
-        # skill should answer. Applied once, before any retrieval path, so it covers lexical AND embedding.
-        if not self._looks_like_task(task):
-            self.store.log("recall_filtered", "*", f"non-task query, no skill fires :: {task[:60]}")
-            return []
-        profiles = self._profiles(statuses)
-        if not profiles:
-            return []
-        idf = self._idf(profiles)
-        default_idf = max(idf.values(), default=1.0)
-        q_mass = sum(idf.get(t, default_idf) for t in qt) or 1.0
-        scored: list[tuple[Skill, float, int]] = []
-        for sk, prof, anchors in profiles:
-            hits = qt & set(prof)
-            qsim = self._best_query_match(self._query_terms(task), sk)
-            if not hits and qsim < self.query_threshold:
-                continue
-            # ANCHOR RULE: the query must touch what the skill IS (its name or applies_when facets), not just
-            # words that happen to appear in its description. This is what stops "change ... settings" pulling
-            # a JSON skill into an INI task.
-            # a strong phrase-level query match is itself an anchor: the user said what the skill is for,
-            # in their own words. Otherwise the query must touch the skill's name/applies_when.
-            if qsim < self.query_threshold and anchors and not (qt & anchors):
-                self.store.log("recall_filtered", sk.name, f"no anchor overlap :: {task[:50]}")
-                continue
-            # a not_for term that is also one of the skill's own anchors is self-contradictory (e.g. a pip
-            # skill listing "global install success" excludes the word "install"); ignore those.
-            neg = self._terms(" ".join((sk.facets or {}).get("not_for", []))) - anchors
-            if neg & qt:
-                self.store.log("recall_filtered", sk.name, f"excluded by not_for {sorted(neg & qt)[:3]}")
-                continue
-            mass = sum(idf.get(t, default_idf) * prof[t] for t in hits)
-            # breadth normalization: a skill advertising itself for twenty situations should not beat a focused
-            # one on a single shared word. Same idea as document-length normalization in BM25 - kept gentle so
-            # it only breaks ties, never outweighs actually matching more of the query.
-            breadth = max(1.0, len(anchors) / 4.0) ** 0.25
-            facet_score = mass / (q_mass * 3.0 * breadth) if hits else 0.0
-            scored.append((sk, max(facet_score, qsim), len(hits) + (2 if qsim >= self.query_threshold else 0)))
-        # rank by how many distinct query terms the skill covers; breadth-adjusted mass separates equals
-        scored.sort(key=lambda x: (-x[2], -x[1]))
-        scored = [(sk, sc) for sk, sc, _n in scored]
-        keep = [(sk, sc) for sk, sc in scored if sc >= self.recall_threshold]
-        if keep and len(keep) > 1:
-            # drop anything far weaker than the best match; a trailing weak hit is noise, not a second opinion
-            best = keep[0][1]
-            keep = [(sk, sc) for sk, sc in keep if sc >= best * self.recall_margin]
-        lexical = keep  # (skill, lexical_score) that passed the lexical gates above
-
-        # ---- HYBRID: let embeddings surface candidates lexical missed (paraphrase robustness) ----
-        emb_hits = self._embed_candidates(task, statuses)   # [(skill, cos)] above embed_threshold, or []
-        if not emb_hits:
-            return lexical[:limit]
-
-        # union by name; fuse scores. A skill strong on EITHER signal is a candidate; the precision gates
-        # (anchor / not_for / intent) below decide whether it actually fires.
-        lex = {sk.name: (sk, sc) for sk, sc in lexical}
-        fused: dict[str, tuple[Skill, float, float]] = {}
-        for name, (sk, lsc) in lex.items():
-            fused[name] = (sk, lsc, 0.0)
-        for sk, cos in emb_hits:
-            l = fused.get(sk.name, (sk, 0.0, 0.0))
-            fused[sk.name] = (sk, l[1], cos)
-
-        out = []
-        for name, (sk, lsc, cos) in fused.items():
-            # embedding-only candidate (lexical missed it): apply the SAME precision gates lexical uses, so a
-            # semantically-near but wrong-intent skill is still filtered. Reuses anchors + not_for.
-            if lsc == 0.0:
-                if not self._passes_precision_gate(task, sk):
-                    continue
-            # weighted fusion: reciprocal-rank-style blend, embeddings weighted for recall, lexical for precision
-            score = self.hybrid_lexical_w * min(1.0, lsc) + self.hybrid_embed_w * cos
-            out.append((sk, score))
-        out.sort(key=lambda x: -x[1])
-        # relative-margin prune, same discipline as lexical
-        if out and len(out) > 1:
-            best = out[0][1]
-            out = [(sk, sc) for sk, sc in out if sc >= best * self.recall_margin]
-        return out[:limit]
-
-    def _embed_candidates(self, task, statuses):
-        """Skills whose embedding is semantically near the query, independent of lexical overlap.
-        Returns [] when no embedding model is configured (pure-lexical fallback, unchanged behavior)."""
-        emb_model = getattr(self._llm, "embed_model", None) if self._llm is not None else None
-        if not emb_model:
-            return []
-        try:
-            qv = self.llm.embed([task])
-        except Exception:
-            qv = None
-        if not qv:
-            return []
-        q = qv[0]
-        out = []
-        for sk in self.store.all_skills():
-            if sk.status not in statuses or not sk.embedding:
-                continue
-            cos = _cosine(q, sk.embedding)
-            if cos >= self.embed_threshold:
-                out.append((sk, cos))
-        out.sort(key=lambda x: -x[1])
-        return out[: self.embed_topk]
-
-    # cheap intent heuristic: creative / factual-question requests are NOT tasks a procedural skill should
-    # answer. This is the D-class fix - "poem about docker" or "explain how git works" must not fire a skill.
-    _NON_TASK = re.compile(r"^\s*(write|compose|draft) (me )?(a |an )?(poem|haiku|song|story|essay|joke)"
-                           r"|^\s*(what|who|when|where|why|which|how) (is|are|was|were|does|do|did|year|does)"
-                           r"|^\s*explain\b|^\s*(recommend|suggest)\b|opinion\b|^\s*translate\b"
-                           r"|logo|to a (five|5).year.old", re.I)
-
-    def _looks_like_task(self, task: str) -> bool:
-        return not self._NON_TASK.search(task or "")
-
-    def _passes_precision_gate(self, task, sk) -> bool:
-        """The precision discipline applied to embedding-only candidates: the query must touch what the skill
-        IS (anchor overlap) OR match a trigger query, and must not hit a not_for term. Without this, a
-        semantically-adjacent skill would false-fire on topically-related but wrong-intent queries."""
-        # an embedding-only candidate answering a non-task (question/creative) request is a false fire
-        if not self._looks_like_task(task):
-            self.store.log("recall_filtered", sk.name, f"embed candidate, non-task query :: {task[:50]}")
-            return False
-        qt = self._terms(task)
-        _, _, anchors = self._profile_of(sk)
-        qsim = self._best_query_match(self._query_terms(task), sk)
-        if qsim < self.query_threshold and anchors and not (qt & anchors):
-            self.store.log("recall_filtered", sk.name, f"embed candidate, no anchor :: {task[:50]}")
-            return False
-        neg = self._terms(" ".join((sk.facets or {}).get("not_for", []))) - anchors
-        if neg & qt:
-            self.store.log("recall_filtered", sk.name, f"embed candidate, not_for {sorted(neg & qt)[:3]}")
-            return False
-        return True
-
-    def _profile_of(self, sk):
-        """Single-skill profile (weighted terms + anchors), reusing the same logic as _profiles."""
-        for s2, prof, anch in self._profiles((sk.status,)):
-            if s2.name == sk.name:
-                return s2, prof, anch
-        return sk, {}, set()
-
-    def session(self, task: str, agent: str = "", metadata: dict | None = None, auto_learn: bool = True):
-        """Record a task and submit it on exit. See record.py - this is the easy path to learn()."""
+    def session(self, task: str, agent: str = "", metadata: dict | None = None, auto_learn: bool = True,
+                error_hints: bool = True, on_hint=None):
+        """Record a task and submit it on exit. See record.py - this is the easy path to learn().
+        error_hints: a failed tool call surfaces matching skills for the next step (Session.hints_text())."""
         from .record import Session
-        return Session(self, task, agent=agent, metadata=metadata, auto_learn=auto_learn)
+        return Session(self, task, agent=agent, metadata=metadata, auto_learn=auto_learn,
+                       error_hints=error_hints, on_hint=on_hint)
+
+    def run_pending_evals(self, runner, limit: int = 5) -> list[dict[str, Any]]:
+        """Close the verification loop automatically.
+
+        A new skill stays a *candidate* until the agent actually re-runs the task that produced it, with the
+        skill in context, and succeeds. Without this, that re-run depends on someone doing it by hand, so skills
+        rarely reach *active*. `runner(task, skill_md)` must run your agent on `task` with `skill_md` in its
+        prompt and return the resulting Trace (or dict, or a Session built with auto_learn=False). Its outcome
+        should come from an independent check (Session.verified_by), not the agent's own opinion.
+        """
+        from .record import Session
+        out = []
+        for ev in self.store.pending_host_evals(limit):
+            sk = self.store.get_skill(ev.skill_name)
+            if not sk:
+                continue
+            try:
+                res = runner(ev.task, sk.to_skill_md())
+                if isinstance(res, Session):
+                    res = res.trace or res.build()
+                t = res if isinstance(res, Trace) else normalize(res)
+            except Exception as e:           # a crashing run is a failed eval, and must be recorded as one
+                t = normalize({"task": ev.task, "outcome": "failure",
+                               "steps": [{"role": "tool", "content": f"runner raised {e!r}"}]})
+            t.eval_id = ev.id
+            if ev.skill_name not in t.skills_used:
+                t.skills_used.append(ev.skill_name)
+            r = self.learn(t)
+            r["eval_id"], r["skill"] = ev.id, ev.skill_name
+            out.append(r)
+        return out
 
     def pending_evals(self, limit: int = 5) -> list[dict[str, Any]]:
         """Host-run evals waiting for an agent to execute. Run the task, then learn(trace, eval_id=...)."""
@@ -383,6 +159,14 @@ class SkillLoop:
         with obs.request("learn", task=t.task[:80] if hasattr(t, "task") else None):
             t, san = sanitize_trace(t)
             self.store.add_trace(t)
+            if t.eval_id:
+                # A verification re-run is EVIDENCE ABOUT a skill, not a new lesson to learn from. Leaving it
+                # in the queue made the loop feed itself: the re-run became training data, produced another
+                # skill, queued another host eval, and that second eval ran without the skill in its prompt
+                # and failed - so every skill ended with equal passed/failed evals and was demoted to
+                # quarantine no matter how well it actually performed (see CALIBRATION.md, 2026-09-25).
+                # It is still stored, so the audit trail is complete; it is simply not re-learned from.
+                self.store.mark_processed(t.id)
             obs.log("trace.sanitized", trace_id=t.id, redacted=san.get("redacted"),
                     steps_dropped=san.get("steps_dropped"), final_chars=san.get("final_chars"))
             return self._learn_body(t, san)
@@ -417,22 +201,66 @@ class SkillLoop:
                         notes.append(f"{s.name}: host eval passed but stays candidate ({why})")
                     self.store.save_skill(s, snapshot=False)
                 elif s and not passed:
-                    s.status = "quarantine"
+                    # Judge the skill on its record, not on this one eval. Seed 5 quarantined a skill that
+                    # had passed its re-run three times and failed once; the store was already tracking that
+                    # 3-1 record and nothing consulted it.
+                    # Blame the bullet, not the skill. A failed re-run usually implicates one wrong step,
+                    # and discarding the whole skill throws away the parts that were right: seed 4's
+                    # lookup-config-option correctly said to read the config back AND hardcoded the wrong
+                    # key, and the whole thing was dropped.
+                    blamed = gate.blame_bullets(self._llm, s, t)
+                    if blamed:
+                        if not s.bullets:
+                            s.bullets = parse_body(s.body)
+                        record_feedback(s.bullets, [], blamed)
+                        s.bullets, _ = refine(s.bullets)
+                    tried = s.successes + s.failures
+                    rate = (s.successes / tried) if tried else 0.0
+                    unreliable = (tried >= self.policy.quarantine_min_evidence
+                                  and rate < self.policy.quarantine_below_hit_rate)
+                    if unreliable or tried < self.policy.quarantine_min_evidence:
+                        s.status = "quarantine"
+                        why = f"host eval {ev.id} failed ({s.successes}/{tried} passed)"
+                    else:
+                        # mostly works: still retrievable, but no longer presented as verified
+                        s.status = "candidate"
+                        why = f"host eval {ev.id} failed but record is {s.successes}/{tried}; back to candidate"
                     self.store.save_skill(s, snapshot=False)
-                    self.store.log("demote", s.name, f"host eval {ev.id} failed")
-                    notes.append(f"{s.name}: -> quarantine (host eval failed)")
+                    if blamed:
+                        why += f"; pruned bullets {blamed[:3]}"
+                    self.store.log("demote", s.name, why)
+                    notes.append(f"{s.name}: -> {s.status} ({why})")
         self.store.log("learn", t.id, f"{t.outcome} ({t.confidence:.2f}) {t.task[:80]}")
         self.store.metric("episode_success", 1.0 if t.outcome == "success" else 0.0)
         obs.log("learn.queued", trace_id=t.id, outcome=t.outcome, request_id=obs.current_request_id())
+        self._warn_if_not_learning()
         return {"trace_id": t.id, "outcome": t.outcome, "confidence": t.confidence, "queued": True,
                 "notes": notes, "sanitized": san, "request_id": obs.current_request_id()}
+
+    def _warn_if_not_learning(self, backlog: int = 3) -> None:
+        """learn() only QUEUES. If nothing ever calls process(), no skill is ever written and the loop never
+        closes - silently. Say so, once, as soon as a backlog forms with no worker running."""
+        if self._worker or self._warned_unprocessed:
+            return
+        try:
+            pending = len(self.store.pending_traces(backlog))
+        except Exception:
+            return
+        if pending >= backlog:
+            self._warned_unprocessed = True
+            import warnings
+            msg = (f"SkillLoop: {pending}+ traces are queued but nothing is learning from them. Call "
+                   f"loop.process() after tasks, use SkillLoop(auto_process=True), or set SKILLLOOP_AUTO_PROCESS=1.")
+            warnings.warn(msg, RuntimeWarning, stacklevel=3)
+            obs.log("learn.backlog_unprocessed", pending=pending)
 
     # ------------------------------------------------------------------ background
     def process(self, max_traces: int = 20) -> list[dict[str, Any]]:
         """Run the learning loop over queued traces. Safe to call repeatedly."""
         with self._lock:
             report = []
-            from .llm import PendingManualCall
+            errors: list[str] = []
+            from .llm import PendingManualCall, QuotaExhausted
             for t in self.store.pending_traces(max_traces):
                 try:
                     report.append(self._process_one(t))
@@ -440,10 +268,33 @@ class SkillLoop:
                     # leave the trace queued; re-running process() resumes once the answer is filled in
                     report.append({"trace_id": t.id, "awaiting_manual": p.key, "role": p.role, "path": p.path})
                     continue
+                except QuotaExhausted as e:
+                    # Every remaining trace would fail the same way. Stop now, leave them queued, and say so:
+                    # grinding through the rest produces a library that is missing most of its skills while
+                    # looking like one that simply learned little.
+                    self.store.log("error", t.id, repr(e))
+                    report.append({"trace_id": t.id, "quota_exhausted": str(e)})
+                    import warnings as _w
+                    _w.warn(f"SkillLoop: stopped processing - {e}. {len(self.store.pending_traces(999))} "
+                            f"trace(s) stay queued; re-run process() once the quota resets.",
+                            RuntimeWarning, stacklevel=2)
+                    obs.log("process.quota_exhausted", pending=len(self.store.pending_traces(999)))
+                    return report
                 except Exception as e:  # never let one bad trace stall the queue
                     self.store.log("error", t.id, repr(e))
                     report.append({"trace_id": t.id, "error": repr(e)})
+                    errors.append(repr(e))
                 self.store.mark_processed(t.id)
+            if errors:
+                # A trace that raises produces no skill, and until now that was indistinguishable from a
+                # trace that legitimately taught nothing. An eval could therefore score a library that had
+                # silently lost every skill (see CALIBRATION.md, 2026-09-25) and report it as a result.
+                import warnings as _w
+                kinds = sorted({e.split("(")[0] for e in errors})
+                _w.warn(f"SkillLoop: {len(errors)} trace(s) failed during process() and produced no skill "
+                        f"({', '.join(kinds)}). These are errors, not lessons; the library is incomplete.",
+                        RuntimeWarning, stacklevel=2)
+                obs.log("process.errors", count=len(errors), kinds=kinds)
             if self._lessons_since_distill >= self.policy.principle_every_n_lessons:
                 try:
                     new = distill_principles(self.llm, self.store)
@@ -704,9 +555,3 @@ class SkillLoop:
         return str(self.store.skills_dir)
 
 
-def _cosine(a: list[float], b: list[float]) -> float:
-    if len(a) != len(b):
-        return 0.0
-    dot = sum(x * y for x, y in zip(a, b))
-    na = math.sqrt(sum(x * x for x in a)); nb = math.sqrt(sum(x * x for x in b))
-    return dot / (na * nb) if na and nb else 0.0

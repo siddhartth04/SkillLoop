@@ -3,6 +3,139 @@
 Run `skillloop calibrate` whenever you change a model or a prompt. This file records what past runs found and
 what changed because of them, so the prompts have a paper trail.
 
+## 2026-09-25 (evening) — the gate overruling its own evidence
+
+**The eighth self-caught false positive, and the subtlest.**
+
+With the encoding, self-feeding and quota bugs fixed, seed 4 ran cleanly: 18 traces learned, 8 skills built,
+no errors. The promotion re-runs reported twelve successes and six failures against the hidden checker. Then:
+
+```
+skills learned: {'verify-function-signature-units': 'quarantine',
+                 'inspect-returned-object': 'quarantine', ... }   # all eight
+```
+
+A skill whose re-run passed 3/3 was quarantined. The eval table showed the giveaway: **18 judge evals passed,
+18 host evals failed** — a perfect split, again.
+
+`record_host_eval()` re-grades a passing re-run with an assertion judge, and the judge can veto it. Its
+verdict here was fair on its own terms:
+
+> *"The trajectory shows only a single call to bruzem.at with an assumed index conversion; no minimal
+> verification step."*
+
+The trajectory IS one step: a promotion re-run deliberately runs the task once and grades it with the task's
+hidden checker. So the judge was being asked to second-guess a real check using a trajectory that was never
+meant to satisfy it, and every genuine pass was overturned.
+
+This inverts the gate's own premise. The project's claim is that *a skill is a hypothesis until a test
+agrees* — not until a model agrees. `Session.verified_by()` now records a `"test"` signal, and
+`record_host_eval()` treats that as authoritative; the judge still runs when the only evidence is the agent's
+own word about its own work.
+
+**What makes this the subtlest of the three:** the other two produced obviously broken states (skills missing,
+traces doubling). This one produced a report that looked like *diligence* — a strict gate rejecting weak
+skills — which is exactly what a reader hoping for rigour would want to believe.
+
+## 2026-09-25 (later still) — a daily quota that looked like a hung process
+
+**Not a false positive: a false *nothing*.** The run simply stopped, and nothing said why.
+
+The third seed-4 attempt made no progress for 13 minutes. No output, no exception, 3 of 18 traces processed.
+Every one of the eight keys answered a trivial probe in 0.6s, so the provider was plainly up. A single
+`process()` call on one trace was timed directly, and only then did the cause surface:
+
+```
+Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01km...`
+service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199716
+```
+
+Two things made this invisible. Groq's free tier caps tokens **per day per organization**, so eight keys in
+one account share one budget and the key rotation that exists precisely for rate limits cannot help. And the
+rate-limit headers the client can read (`x-ratelimit-remaining-tokens`) describe only the per-minute window,
+which looked entirely healthy at 7,923 of 8,000.
+
+Both limits arrive as HTTP 429, and the client treated them identically: six retries with backoff, in
+silence, for a condition that resolves at midnight rather than in seconds.
+
+Fixed so the failure is legible rather than mute:
+- `QuotaExhausted` is raised immediately for a daily/organization cap, quoting the provider's own message.
+  Burst limits keep retrying as before.
+- `process()` stops on it, leaves the remaining traces queued and warns, rather than grinding out a library
+  missing most of its skills.
+- The eval refuses to score while any trace is unprocessed. That is the step that matters: without it, a
+  quota limit silently becomes a *result*, and it would have been the third such false negative in one day.
+
+## 2026-09-25 (later) — the verification loop was feeding itself
+
+**The seventh self-caught false positive, found in the re-run of the sixth.**
+
+With the encoding bug fixed, seed 4 was re-run. The promotion log showed skills passing their re-runs:
+
+```
+promotion re-runs: [('inspect-return-type', 'success'), ('inspect-return-type', 'success'),
+                    ('inspect-return-type', 'success'), ('bruzem-numeric-units', 'success'), ...]
+skills learned:    {'inspect-return-type': 'quarantine', 'bruzem-numeric-units': 'quarantine', ...}
+```
+
+Two skills passed their verification 3/3 and both ended in `quarantine`. All seven did.
+
+The eval table showed the signature: **every skill had exactly as many `failed` host evals as `passed`
+ones** — 3/3, 2/2, 4/4. And the trace table had grown from 18 training tasks to 36 traces.
+
+`run_pending_evals()` handed its re-run to `learn()`, which queued it like any other trajectory. `process()`
+then treated that verification run as a *new lesson*: it synthesised another skill from it, and that skill
+queued another host eval. The second eval was a fresh trace with no skill in its prompt, so it failed — and
+the failure demoted the skill that had just passed.
+
+A verification re-run is **evidence about a skill, not a lesson to learn from**. It is now stored for the
+audit trail but marked processed, so it never re-enters the learning queue.
+
+**Why this one is worth recording:** the bug was introduced by the very change that was meant to strengthen
+the evaluation — wiring the gate into the eval so that promotion was actually exercised. Before that change
+the gate never ran and every skill sat at `candidate`; after it, the gate ran and rejected everything. Both
+states produce a plausible-looking report, and neither is a measurement. Verified both directions after the
+fix: a passing re-run reaches `active` with zero failed evals, a failing one still lands in `quarantine`.
+
+## 2026-09-25 — a text encoding nearly manufactured a negative result
+
+**The sixth self-caught false positive, and the closest call so far.**
+
+Seed 4 of the conventions eval was run on Windows against `openai/gpt-oss-120b`. It passed every gate (null
+agreement 94.4%, control 22%, oracle 100%) and returned a clean, plausible, *unfavourable* verdict:
+
+```
+skillloop  8/18 = 0.444      memory  11/18 = 0.611      control  4/18 = 0.222
+VERDICT: No significant improvement over control.
+```
+
+Read at face value, that is evidence against the project's central claim, on a seed chosen before the data was
+seen. The report also showed five of six learned skills sitting in `quarantine`, which looked like the
+verification gate doing its job and rejecting weak skills.
+
+It was not. The event log showed the real cause:
+
+```
+error  UnicodeEncodeError('charmap', "---
+name: check-function-index...
+```
+
+`Store.save_skill` wrote `SKILL.md` with `write_text()` and no encoding, so Python used the platform default,
+which on Windows is cp1252. The model had written a **non-breaking hyphen (U+2011)** in the skill text. Every
+skill containing one was destroyed on write and never entered the library.
+
+The consequence for the measurement: the agent had **one** skill available across 21 test episodes, and in 14
+of them it received nothing at all — it was silently running as the control condition while being scored as
+SkillLoop. The comparison was not weak evidence, it was not evidence.
+
+**What was wrong with the evaluation, not just the code:** a skill that fails to save and a skill that fails
+its gate were indistinguishable in the report. Both showed up as "not active". The run is now re-done with the
+encoding fixed, and the same failure would still not announce itself, which is the part worth remembering.
+
+Fixed: all twelve text reads and writes in `skillloop/` specify UTF-8, as do the eval's cache and report files.
+Regression test: a skill containing U+2011, an em dash, smart quotes and a checkmark must survive a save and
+reload (`tests/test_purpose.py`).
+
 ## 2026-09-10 — first live run (Groq free tier)
 
 Models: reflect/synth/judge = `openai/gpt-oss-120b`, outcome/inject = `openai/gpt-oss-20b`.

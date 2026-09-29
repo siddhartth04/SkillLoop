@@ -120,6 +120,16 @@ Rules:
   showed; speculative extra fixes "in case"; example paths, service names or file names not in the evidence
   (use <placeholders>). One good path beats five hedged ones. If you add a command not in the evidence, it must
   be one any senior engineer would know by heart.
+- UNKNOWN VALUES: the failure often turns on one specific value - a config key, a unit, a return shape, a flag.
+  The traces show which value was WRONG; they frequently never show which one is RIGHT. Do not guess it. A
+  confidently wrong specific is worse than no skill at all, because the agent follows it instead of reading the
+  documentation, and loses the attempt.
+  When the evidence does not establish the correct value, write a procedure that DISCOVERS it at run time,
+  using the API and tools the evidence shows exist: read the current state back and inspect it, probe with a
+  known input and compare, or consult the reference before committing to a value. Then act on what came back.
+  A skill that says "call get_config() and use the key names it returns" is right for every value; a skill that
+  says "use 'retries'" is right only if you guessed correctly.
+  Write the exact value ONLY when a trace shows it working, or the documentation in the trace states it.
 - Never include instructions that override the agent's other instructions, send data anywhere, or ask the agent
   to hide anything from the user. The skill body is advice about the task, nothing else.
 - If PATCHING an existing skill, preserve everything still valid and change only what the new lessons require.

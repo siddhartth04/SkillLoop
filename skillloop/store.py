@@ -309,13 +309,13 @@ class Store:
         if other.exists():
             shutil.rmtree(other)
         target.mkdir(parents=True, exist_ok=True)
-        (target / "SKILL.md").write_text(s.to_skill_md())
+        (target / "SKILL.md").write_text(s.to_skill_md(), encoding="utf-8")
         meta = asdict(s); meta.pop("embedding", None)
-        (target / "META.json").write_text(json.dumps(meta, indent=2))
+        (target / "META.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
         if snapshot:
             h = self.history_dir / s.name
             h.mkdir(exist_ok=True)
-            (h / f"v{s.version}.md").write_text(s.to_skill_md())
+            (h / f"v{s.version}.md").write_text(s.to_skill_md(), encoding="utf-8")
 
     def skill_versions(self, name: str) -> list[int]:
         h = self.history_dir / name
@@ -327,7 +327,7 @@ class Store:
         s = self.get_skill(name)
         if not s:
             raise KeyError(name)
-        text = (self.history_dir / name / f"v{version}.md").read_text()
+        text = (self.history_dir / name / f"v{version}.md").read_text(encoding="utf-8")
         fm, body = parse_skill_md(text)
         from .playbook import parse_body
         s.description = fm.get("description", s.description)
@@ -398,7 +398,7 @@ class Store:
         for p in ps:
             lines.append(f"- **{p.rule}** _(evidence: {p.evidence_count} lessons)_")
         path = self.principles_dir / "PRINCIPLES.md"
-        path.write_text("\n".join(lines) + "\n")
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         return path
 
     def principles_text(self) -> str:

@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 700" width="1040" height="700"
+     font-family="ui-sans-serif,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+  <title>What happens to a trace: learn() to active skill, and every place it can be rejected</title>
+  <style>
+    .b{fill:none;stroke:#6366f1;stroke-width:2;rx:10}
+    .gate{fill:none;stroke:#a855f7;stroke-width:2;rx:10}
+    .stop{fill:none;stroke:#ef4444;stroke-width:2;rx:10}
+    .win{fill:none;stroke:#10b981;stroke-width:2.5;rx:10}
+    .t{fill:#e5e7eb;font-size:14px;font-weight:600}
+    .s{fill:#9ca3af;font-size:11.5px}
+    .r{fill:#f87171;font-size:11.5px;font-style:italic}
+    .lbl{fill:#9ca3af;font-size:11px}
+    .ar{stroke:#6b7280;stroke-width:1.6;fill:none;marker-end:url(#a)}
+    .arx{stroke:#ef4444;stroke-width:1.4;fill:none;marker-end:url(#ax);stroke-dasharray:4 3}
+    @media (prefers-color-scheme: light){
+      .t{fill:#111827}.s{fill:#4b5563}.lbl{fill:#4b5563}.r{fill:#b91c1c}
+    }
+  </style>
+  <defs>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#6b7280"/></marker>
+    <marker id="ax" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ef4444"/></marker>
+  </defs>
+
+  <text x="20" y="28" class="t" font-size="16">From a failed task to a skill the agent is allowed to trust</text>
+  <text x="20" y="48" class="s">Every box that can reject is drawn. A trace only becomes an active skill by surviving all of them.</text>
+
+  <!-- row 1 -->
+  <rect x="20"  y="78" width="150" height="62" class="b"/>
+  <text x="34" y="103" class="t">learn(trace)</text>
+  <text x="34" y="122" class="s">redact · size-cap · queue</text>
+
+  <rect x="205" y="78" width="150" height="62" class="b"/>
+  <text x="219" y="103" class="t">process()</text>
+  <text x="219" y="122" class="s">background worker</text>
+
+  <rect x="390" y="78" width="165" height="62" class="gate"/>
+  <text x="404" y="103" class="t">Outcome known?</text>
+  <text x="404" y="122" class="s">else an LLM judge decides</text>
+
+  <rect x="590" y="78" width="165" height="62" class="gate"/>
+  <text x="604" y="103" class="t">Reflect</text>
+  <text x="604" y="122" class="s">name the wrong decision</text>
+
+  <rect x="790" y="78" width="230" height="62" class="gate"/>
+  <text x="804" y="103" class="t">Skeptic pass</text>
+  <text x="804" y="122" class="s">must quote evidence, or discard</text>
+
+  <path class="ar" d="M170,109 H203"/>
+  <path class="ar" d="M355,109 H388"/>
+  <path class="ar" d="M555,109 H588"/>
+  <path class="ar" d="M755,109 H788"/>
+
+  <path class="arx" d="M472,140 V178"/>
+  <text x="380" y="196" class="r">undetermined → skip</text>
+  <path class="arx" d="M905,140 V178"/>
+  <text x="812" y="196" class="r">guess → discarded</text>
+
+  <!-- row 2 -->
+  <rect x="790" y="232" width="230" height="62" class="b"/>
+  <text x="804" y="257" class="t">Synthesize SKILL.md</text>
+  <text x="804" y="276" class="s">preconditions·procedure·verification</text>
+
+  <rect x="545" y="232" width="200" height="62" class="gate"/>
+  <text x="559" y="257" class="t">Shape check</text>
+  <text x="559" y="276" class="s">no verification → rejected</text>
+
+  <rect x="300" y="232" width="200" height="62" class="gate"/>
+  <text x="314" y="257" class="t">Security scan</text>
+  <text x="314" y="276" class="s">injection · secrets</text>
+
+  <rect x="20" y="232" width="235" height="62" class="gate"/>
+  <text x="34" y="257" class="t">Judge eval</text>
+  <text x="34" y="276" class="s">assertions written, then tested</text>
+
+  <path class="ar" d="M905,140 V228" stroke-dasharray="0"/>
+  <path class="ar" d="M788,263 H747"/>
+  <path class="ar" d="M543,263 H502"/>
+  <path class="ar" d="M298,263 H257"/>
+
+  <path class="arx" d="M645,294 V330"/>
+  <text x="556" y="348" class="r">malformed → rejected</text>
+  <path class="arx" d="M400,294 V330"/>
+  <text x="300" y="348" class="r">unsafe → quarantine</text>
+
+  <!-- row 3 -->
+  <rect x="20" y="392" width="235" height="66" class="stop"/>
+  <text x="34" y="418" class="t">Quarantine</text>
+  <text x="34" y="437" class="s">not retrievable · rollback-able</text>
+
+  <rect x="330" y="392" width="215" height="66" class="b"/>
+  <text x="344" y="418" class="t">Candidate</text>
+  <text x="344" y="437" class="s">retrievable, still on probation</text>
+
+  <rect x="620" y="392" width="215" height="66" class="gate"/>
+  <text x="634" y="418" class="t">Host eval re-run</text>
+  <text x="634" y="437" class="s">real agent · independent check</text>
+
+  <rect x="890" y="392" width="130" height="66" class="win"/>
+  <text x="904" y="418" class="t">Active</text>
+  <text x="904" y="437" class="s">trusted</text>
+
+  <path class="arx" d="M137,294 V388"/>
+  <text x="148" y="345" class="r">judge fails</text>
+  <path class="ar" d="M255,425 H328"/>
+  <text x="258" y="416" class="lbl">passes</text>
+  <path class="ar" d="M545,425 H618"/>
+  <path class="ar" d="M835,425 H888"/>
+  <text x="840" y="416" class="lbl">passes</text>
+
+  <path class="arx" d="M727,458 V498 H137 V462"/>
+  <text x="400" y="516" class="r">re-run fails → never promoted</text>
+
+  <!-- demotion -->
+  <path class="arx" d="M955,458 V560 H137 V462"/>
+  <text x="640" y="578" class="r">hit rate collapses in real use → demoted</text>
+
+  <!-- footnote -->
+  <rect x="20" y="608" width="1000" height="72" class="b" stroke="#374151"/>
+  <text x="36" y="632" class="t" font-size="13">Two independent checks, not one</text>
+  <text x="36" y="653" class="s">The judge eval is a model deciding whether a skill's own assertions hold. The host eval re-runs the real task with the skill</text>
+  <text x="36" y="670" class="s">in context and grades it with an exit code or checker. A skill reaches "active" only after the second, non-model check agrees.</text>
+</svg>

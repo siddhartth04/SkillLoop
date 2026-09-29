@@ -60,7 +60,7 @@ def run(limit: int | None = None, verbose: bool = True, checkpoint: str | None =
     rows: list[dict[str, Any]] = []
     done: dict[int, dict[str, Any]] = {}
     if checkpoint and os.path.exists(checkpoint):
-        for line in open(checkpoint):
+        for line in open(checkpoint, encoding="utf-8"):
             try:
                 r = json.loads(line); done[r["i"]] = r
             except Exception:
@@ -143,7 +143,7 @@ def run(limit: int | None = None, verbose: bool = True, checkpoint: str | None =
             row["error"] = repr(e)
         rows.append(row)
         if checkpoint:
-            with open(checkpoint, "a") as f:
+            with open(checkpoint, "a", encoding="utf-8") as f:
                 f.write(json.dumps(row, default=str) + "\n")
         say(f"[{i:2d}/{len(corpus)}] {trace.task[:55]:55s} "
             + ("ERR " + row["error"][:60] if "error" in row else
@@ -238,7 +238,7 @@ def main(argv: list[str]) -> None:
     rep = run(a.limit, verbose=not a.quiet, checkpoint=a.checkpoint, max_traces=a.max, only=only)
     if not rep["complete"]:
         print(f"\n(partial: {len(rep['rows'])}/{rep['traces']} traces done; re-run with the same --checkpoint to continue)")
-    with open(a.out, "w") as f:
+    with open(a.out, "w", encoding="utf-8") as f:
         json.dump(rep, f, indent=2, default=str)
     slim = {k: v for k, v in rep.items() if k != "rows"}
     print("\n=== CALIBRATION REPORT ===")

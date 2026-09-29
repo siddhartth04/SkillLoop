@@ -2,7 +2,7 @@
 
 Two pieces:
 
-1. **MCP server** — add SkillLoop to Hermes' MCP config (check the current Hermes docs for the exact key; it is
+1. **MCP server** — add SkillLoop to Hermes' MCP config (check the current Hermes docs for the exact key, it is
    `mcp_servers` in `~/.hermes/config.yaml` at time of writing):
 
    ```yaml

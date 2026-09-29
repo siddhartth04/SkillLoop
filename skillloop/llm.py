@@ -98,10 +98,19 @@ class LLM:
             if single and single not in pool:
                 pool.insert(0, single)
             self._keys = pool or [None]          # None -> let the SDK resolve (env / default)
-            self._key_idx = 0
+            # Several clients (agent + learner, parallel workers) sharing one key pool would all hammer key #0
+            # and only spread out after each hits its rate limit. Starting at a random offset avoids that, but
+            # it makes the starting key unpredictable, so it is opt-in: set SKILLLOOP_SPREAD_KEYS=1 when you
+            # actually run several clients against one pool. The default start is deterministic (key 0).
+            if os.getenv("SKILLLOOP_SPREAD_KEYS", "").lower() in ("1", "true", "yes"):
+                import random as _random
+                self._key_idx = _random.randrange(len(self._keys))
+            else:
+                self._key_idx = 0
             self._key_cooldown: dict[int, float] = {}   # key index -> unix time it becomes usable again
             self._base_url = os.getenv("OPENAI_BASE_URL") or None
-            self.client = openai.OpenAI(api_key=self._keys[0], base_url=self._base_url, timeout=120.0, max_retries=1)
+            self.client = openai.OpenAI(api_key=self._keys[self._key_idx], base_url=self._base_url,
+                                        timeout=_request_timeout(), max_retries=1)
             default = model or os.getenv("SKILLLOOP_MODEL", "gpt-4.1-mini")
         elif provider == "manual":
             import pathlib
@@ -129,6 +138,18 @@ class LLM:
             try:
                 return self._complete(system, user, max_tokens, temperature, role)
             except Exception as e:
+                if _is_daily_quota(str(e)):
+                    # A daily cap is per KEY (per organization, for Groq), not per pool. Retrying the same
+                    # key cannot succeed, but another key in the pool usually belongs to a different account
+                    # and still has budget - eight keys across eight orgs is eight separate daily quotas.
+                    # Park this key until tomorrow and move on; only give up when every key is spent.
+                    if self._rotate_key(cooldown=_DAY_SECONDS):
+                        continue
+                    raise QuotaExhausted(
+                        f"{self.provider} daily quota exhausted for model {self.model!r} on ALL "
+                        f"{len(self._keys)} key(s); this is not a transient rate limit and retrying will not "
+                        f"help until the provider's daily reset. Provider said: {str(e)[:200]}"
+                    ) from e
                 wait, exact = _retry_after(e)
                 if wait is None or attempt == self.max_retries:
                     raise
@@ -151,7 +172,8 @@ class LLM:
             j = (self._key_idx + step) % len(self._keys)
             if self._key_cooldown.get(j, 0) <= now:
                 self._key_idx = j
-                self.client = openai.OpenAI(api_key=self._keys[j], base_url=self._base_url, timeout=120.0, max_retries=1)
+                self.client = openai.OpenAI(api_key=self._keys[j], base_url=self._base_url,
+                                        timeout=_request_timeout(), max_retries=1)
                 self.calls.append({"role": "_rotate", "model": f"key#{j}", "ms": 0, "ok": True})
                 return True
         return False
@@ -217,7 +239,7 @@ class LLM:
         key = hashlib.sha1(f"{role}|{system[:200]}|{user}".encode()).hexdigest()[:12]
         ans = self.manual_dir / f"{key}.answer.json"
         if ans.exists():
-            text = ans.read_text()
+            text = ans.read_text(encoding="utf-8")
             problem = _validate_manual(text, role)
             if problem:
                 # fail loudly at the file, not four steps later inside the pipeline with an AttributeError
@@ -225,7 +247,8 @@ class LLM:
             return text
         req = self.manual_dir / f"{key}.request.json"
         if not req.exists():
-            req.write_text(json.dumps({"id": key, "role": role, "system": system, "user": user}, indent=1))
+            req.write_text(json.dumps({"id": key, "role": role, "system": system, "user": user}, indent=1),
+                           encoding="utf-8")
         raise PendingManualCall(key, role or "?", str(req))
 
     # a deterministic stand-in so tests run without keys
@@ -235,6 +258,43 @@ class LLM:
         if LLM._fake_handler:
             return LLM._fake_handler(system, user)
         return "{}"
+
+
+
+def _request_timeout() -> float:
+    """Seconds to wait for one completion before giving up on it.
+
+    A hung socket is indistinguishable from a slow model, and the learning pipeline makes several calls in
+    sequence per trace (reflect, skeptic, synthesize, judge), so one stalled connection can look like a dead
+    process for many minutes. A bounded timeout turns that into a retry, which the key pool absorbs.
+    Raise SKILLLOOP_TIMEOUT for models that genuinely need longer.
+    """
+    try:
+        return max(5.0, float(os.getenv("SKILLLOOP_TIMEOUT", "90")))
+    except ValueError:
+        return 90.0
+
+
+_DAY_SECONDS = 24 * 60 * 60      # park a daily-capped key until the provider resets
+
+
+class QuotaExhausted(RuntimeError):
+    """The provider's DAILY quota is gone, not a per-minute burst limit.
+
+    These look identical to an ordinary 429 in the SDK, but they are not the same failure: a per-minute limit
+    clears in seconds and retrying is right, while a daily limit clears at the provider's reset and retrying
+    just burns the retry budget and wall-clock time in silence. A run that hits this looks like a hang - the
+    process sits there, the keys all answer a trivial probe, and nothing explains why no progress is made.
+    Rotating keys does not help either when the quota is per ORGANIZATION, which is how Groq's free tier
+    works: eight keys in one org share one daily budget.
+    """
+
+
+def _is_daily_quota(msg: str) -> bool:
+    """True when a 429 is a daily/organization cap rather than a short burst limit."""
+    m = msg.lower()
+    return ("per day" in m or "tpd" in m or "rpd" in m
+            or ("quota" in m and "exceeded" in m))
 
 
 def _retry_after(e: Exception) -> tuple[float | None, bool]:

@@ -27,11 +27,30 @@ from typing import Any, Callable
 from .schema import Signal, Step, ToolCall, Trace
 
 
+UNVERIFIED_NOTE = (
+    "> UNVERIFIED: this skill was learned from a past failure but has not yet passed an independent\n"
+    "> re-run. Treat it as a hypothesis worth trying, not as established fact.\n\n"
+)
+
+
+def label_by_status(hit: dict[str, Any]) -> str:
+    """Prefix a recalled skill with its verification status.
+
+    An `active` skill has passed an independent re-run with a real check; a `candidate` has passed only
+    a model's judgement. Injected into a prompt the two read identically, so the agent cannot weigh them
+    differently - and a confidently-worded but wrong candidate is the most expensive failure this
+    library has, because it costs an attempt the agent would otherwise spend reasoning from the docs.
+    """
+    md = hit["skill_md"]
+    return UNVERIFIED_NOTE + md if hit.get("status") == "candidate" else md
+
+
 class Session:
     """Records what an agent did, then hands it to learn() on exit."""
 
     def __init__(self, loop, task: str, agent: str = "", metadata: dict | None = None,
-                 auto_learn: bool = True):
+                 auto_learn: bool = True, error_hints: bool = True,
+                 on_hint: Callable[[list[dict[str, Any]]], Any] | None = None):
         self._loop = loop
         self.task = task
         self.agent = agent
@@ -44,9 +63,16 @@ class Session:
         self._outcome: str | None = None
         self._detail = ""
         self._confidence = 0.9
+        self._verified_externally = False
         self.trace: Trace | None = None
         self.result: dict | None = None
         self.started = time.time()
+        # error-time recall: when a tool call fails, skills whose recorded symptoms match the error are queued
+        # here for the agent's NEXT step. Mistakes show up mid-task, not in the task description.
+        self.error_hints = error_hints
+        self.on_hint = on_hint
+        self._hints: list[dict[str, Any]] = []
+        self.hint_log: list[dict[str, Any]] = []
 
     # ---------------- recall ----------------
     def recall(self, task: str | None = None, limit: int = 3) -> list[dict[str, Any]]:
@@ -59,7 +85,7 @@ class Session:
 
     def skills_text(self, task: str | None = None, limit: int = 3) -> str:
         """Same as recall(), already joined into prompt-ready text."""
-        return "\n\n".join(h["skill_md"] for h in self.recall(task, limit))
+        return "\n\n".join(label_by_status(h) for h in self.recall(task, limit))
 
     # ---------------- recording ----------------
     def say(self, content: str) -> "Session":
@@ -68,11 +94,47 @@ class Session:
 
     def tool(self, name: str, args: dict | None = None, result: Any = None, error: Any = None,
              thought: str = "") -> "Session":
-        """Record one tool call. Pass `error` when it failed - failures are the most useful traces."""
+        """Record one tool call. Pass `error` when it failed - failures are the most useful traces.
+
+        A failed call also triggers error-time recall: matching skills are queued for the agent's next step
+        (read them with hints() / hints_text(), or receive them via on_hint)."""
         self.steps.append(Step("assistant", thought, [ToolCall(name, args or {},
                                                                result=None if result is None else str(result),
                                                                error=None if error is None else str(error))]))
+        if error is not None and str(error).strip() and self.error_hints:
+            self._recall_on_error(str(error))
         return self
+
+    def _recall_on_error(self, error: str) -> None:
+        try:
+            shown = set(self.skills_used) | {h["name"] for h in self._hints}
+            hits = self._loop.recall_for_error(error, task=self.task, exclude=tuple(shown))
+        except Exception:
+            return            # recall must never break the caller's task
+        if not hits:
+            return
+        for h in hits:
+            self.skills_used.append(h["name"])         # attribute the outcome to the skill that was shown
+        self._hints.extend(hits)
+        self.hint_log.append({"step": len(self.steps) - 1, "skills": [h["name"] for h in hits]})
+        if self.on_hint:
+            try:
+                self.on_hint(hits)
+            except Exception:
+                pass
+
+    def hints(self) -> list[dict[str, Any]]:
+        """Skills surfaced by errors since the last call. Put them in the agent's context before its next step."""
+        out, self._hints = self._hints, []
+        return out
+
+    def hints_text(self) -> str:
+        """hints(), joined into prompt-ready text ('' when there is nothing new)."""
+        hs = self.hints()
+        if not hs:
+            return ""
+        return ("A past failure matching this error was turned into a procedure. Follow it:\n\n"
+                + "\n\n".join(label_by_status(h) for h in hs))
 
     def observe(self, content: str) -> "Session":
         self.steps.append(Step("tool", str(content)))
@@ -115,15 +177,22 @@ class Session:
             passed = check
         else:
             passed = (check == 0)
+        self._verified_externally = True     # the verdict came from a checker, not from the agent
         return self.ok(detail or "checker passed") if passed else self.fail(detail or "checker failed")
 
     # ---------------- lifecycle ----------------
     def build(self) -> Trace:
         signals = []
         if self._outcome:
-            signals.append(Signal("session", self._outcome, self._confidence, self._detail[:300]))
+            # "test" marks a verdict that came from an independent check (verified_by), as opposed to the
+            # agent's own report. The gate treats it as authoritative: a model must not overturn a checker.
+            src = "test" if self._verified_externally else "session"
+            signals.append(Signal(src, self._outcome, self._confidence, self._detail[:300]))
+        meta = dict(self.metadata)
+        if self.hint_log:
+            meta["error_hints"] = self.hint_log
         self.trace = Trace(task=self.task, agent=self.agent, steps=self.steps, signals=signals,
-                           skills_used=list(self.skills_used), metadata=self.metadata,
+                           skills_used=list(self.skills_used), metadata=meta,
                            bullets_helpful=list(self.helpful), bullets_harmful=list(self.harmful))
         return self.trace
 

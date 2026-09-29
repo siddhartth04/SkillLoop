@@ -3,7 +3,7 @@
 <img src="assets/skillloop-banner.png" alt="SkillLoop — procedural memory for LLM agents that learns skills from failure and gates them on a verification test" width="720"/>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/tests-72%20passing-18181b?style=for-the-badge" alt="tests"/>
+  <img src="https://img.shields.io/badge/tests-113%20passing-18181b?style=for-the-badge" alt="tests"/>
   <img src="https://img.shields.io/badge/python-3.10%2B-6366f1?style=for-the-badge" alt="python"/>
   <img src="https://img.shields.io/badge/license-MIT-8b5cf6?style=for-the-badge" alt="license"/>
   <a href="CALIBRATION.md"><img src="https://img.shields.io/badge/evidence-pre--registered-a855f7?style=for-the-badge" alt="evidence"/></a>
@@ -62,6 +62,21 @@ Follow the loop in the diagram above. Here is exactly what happens on each pass:
 
 > **A skill is a hypothesis until it passes a test.**
 
+### The same loop, with every rejection drawn
+
+The diagram above is the happy path. This is what actually happens to a trace — including the six places it
+can be thrown away, and the two *independent* checks a skill must clear before the agent is allowed to
+trust it:
+
+<div align="center">
+<img src="assets/pipeline.svg" alt="Detailed SkillLoop pipeline: learn() through reflect, skeptic pass, synthesize, shape check, security scan, judge eval to candidate, then a host eval re-run to active, with every rejection path drawn" width="100%"/>
+</div>
+
+The distinction that matters for evaluating this project: the **judge eval** is a model checking a skill's own
+assertions, but the **host eval** re-runs the real task with the skill in context and grades it with an exit
+code or a checker. A skill reaches `active` only when that second, non-model check agrees. A skill whose hit
+rate later collapses in real use is demoted back to quarantine.
+
 ## Quickstart
 
 ```bash
@@ -84,9 +99,40 @@ with loop.session("migrate the postgres schema") as s:
 
 That's the whole integration. The `session` records the trajectory and submits it on exit — including an uncaught exception, which is often the most valuable trace of all. Already have trajectories in OpenAI/Anthropic format? `loop.learn({"task": ..., "format": "openai", "messages": [...]})` takes them directly.
 
+### The lesson arrives when the mistake does
+
+Mistakes rarely show up in the task description; they show up mid-task, as an error. When a recorded tool call fails, the session matches the error against every skill's recorded symptoms and queues the relevant ones for the agent's next step:
+
+```python
+    s.tool("python", {"code": code}, error=stderr)   # a failed call
+    prompt += s.hints_text()                          # the matching lesson, before the next step ('' if none)
+```
+
+Or push them straight into your agent with `loop.session(task, on_hint=callback)`. Outside a session: `loop.recall_for_error(error_text, task=...)`.
+
+### Keep the loop running
+
+`learn()` only queues. Skills are written by `loop.process()`: call it after tasks, or use `SkillLoop(auto_process=True)` / `SKILLLOOP_AUTO_PROCESS=1` for a background worker. SkillLoop warns once if traces pile up with nothing processing them.
+
+A new skill is a *candidate* until the agent re-runs the task that produced it, with the skill in context, and passes an independent check. Automate that re-run:
+
+```python
+def runner(task, skill_md):                 # your agent, with skill_md in its prompt
+    s = loop.session(task, auto_learn=False)
+    ...                                      # run it
+    return s.verified_by(check.returncode)   # a real check, not the agent's opinion
+
+loop.run_pending_evals(runner)               # passes -> active; fails or crashes -> not promoted
+```
+
 ## Status & honest scope
 
 This project's defining trait is that **it does not overclaim.**
+
+> **Check every number yourself:** `python qa/reproduce.py` re-runs each claim below that does not need an
+> API key and verifies it against the figure published here — 9/9 in about two minutes. Results that needed a
+> model are replayed from committed raw data and labelled as such. If a claim ever stops reproducing, the
+> script exits non-zero.
 
 ### 🟡 Promising pilot — pre-registered, honest about power
 
@@ -101,6 +147,74 @@ On **3 necessity-screened tasks** (each run 3×), where a baseline agent reliabl
 
 **To earn a real claim, the project needs more distinct tasks** — the HumanEval+ run (in progress) is the path there.
 
+### 🧪 Head-to-head against a real baseline — including where it loses
+
+The pilot above shows skills beat *no memory*. The harder question is whether SkillLoop's machinery beats
+**simply pasting past attempts into the prompt**. A second evaluation asks exactly that, on a library that
+exists nowhere in pretraining: a seeded generator builds an API whose names, data and conventions all come
+from a random seed, so the model cannot know it and cannot have memorized it.
+
+Protocol ([`qa/conv_eval/PROTOCOL.md`](qa/conv_eval/PROTOCOL.md)) was **fixed before any model ran** — gates,
+metrics, statistical test and the exact verdict wording. Model: `openai/gpt-oss-120b`, temperature 0.
+
+| Condition | Seed 2 | Seed 4 | Pooled (n=36) | vs control |
+|:--|:--:|:--:|:--:|:--:|
+| Control (docs only) | 3/18 | 4/18 | 7/36 = 19% | — |
+| Control, repeated *(null check)* | 5/18 | 5/18 | 10/36 = 28% | — |
+| Simple memory *(raw past attempts)* | 10/18 | 11/18 | 21/36 = 58% | 14–0, p = 0.0001 |
+| **SkillLoop** | 11/18 | **13/18** | **24/36 = 67%** | **17–0, p = 0.00002** |
+| Oracle *(perfect notes)* | 18/18 | 18/18 | 36/36 = 100% | — |
+
+**SkillLoop beats control on both seeds, 17–0 across 36 paired tasks (p = 0.00002). It still does *not*
+significantly beat simple memory (6–3, p = 0.51).**
+
+That is the pre-registered verdict, reported as written: *"SkillLoop helps, but its extra machinery is not yet
+justified over simple memory."* It has now survived a second seed. Two seeds agreeing in direction is worth
+more than one, but 6–3 at n = 36 is not a result, and the honest reading is unchanged.
+
+Seed 4 was the first run in which the gate both promoted and rejected: five skills reached `active` by passing
+an independent re-run, four were quarantined for failing one. It also reached **67% first-attempt** success
+against memory's 28% — in seed 2 most wins arrived only after an error triggered recall.
+
+**Why it came out that way** matters more than the score. Splitting the same 18 tasks by what the *training
+feedback* revealed separates them cleanly:
+
+| Training feedback | n | control | memory | SkillLoop |
+|:--|:--:|:--:|:--:|:--:|
+| A traceback naming the problem | 9 | 3/9 | **9/9** | 6/9 |
+| Only "check failed" | 9 | 0/9 | 1/9 | **5/9** |
+
+When a training attempt crashed, the fix is sitting in the recorded code and raw past attempts are very hard
+to beat. When it merely failed its check, the learner was told "check failed" and nothing else — **the correct
+value was never shown to it**, every recorded attempt is wrong, and copying them cannot help. That is the case
+a learned skill exists for, and there it wins 4–0 head-to-head (p = 0.125, n = 9 — directional, not
+significant). Reproduce with `python -m qa.conv_eval.analyze`.
+
+The clearest pair, from the same run: the *units* skill could not know timeouts were milliseconds, so it wrote
+a procedure to **find out** — probe the API, measure, convert — and scored 3/3 where memory scored 0/3. The
+*config-keys* skill could not know the keys were `UPPER-KEBAB-CASE`, and **guessed** `'retries'`; the real key
+was `'MAX-RETRIES'`, and it scored 0/3 — although the documented `read_config()` would have answered it in one
+call. Encoding a way to discover the unknown generalises; asserting it is a coin flip. The synthesis prompt now
+carries a rule for exactly that, **untested against a real model** until the next seed runs.
+
+Two things make it worth reading anyway. The methods succeed on **different conventions** (SkillLoop 3/3 on
+unit errors where memory scored 0/3; memory 3/3 on return-shape errors where SkillLoop scored 1/3), which
+points at combining them rather than choosing. And 7 of SkillLoop's 11 wins came on the **second** attempt —
+error-time recall, not task-start recall, is doing the work.
+
+One caveat that run exposed, and which is now fixed: the eval stopped at `process()`, so all seven learned
+skills stayed `candidate` and the verification gate — the project's central claim — was never exercised. The
+agent was consuming skills that had passed only a model's judgement. Both runners now re-run each new skill's
+own task, graded by the hidden checker, before it can reach `active`; and a skill that is still a candidate
+now says so in the agent's prompt rather than reading like established fact.
+
+Everything is in [`qa/conv_eval/RESULTS.md`](qa/conv_eval/RESULTS.md): every episode, every learned skill, and
+the failures. Validate the harness without a model or an API key:
+
+```bash
+python -m qa.conv_eval.run --selfcheck      # generator, checkers, gates, stats — all offline
+```
+
 ### ⚠️ Caveats that travel with those numbers
 
 - **Selection effect by design** — measured only where the baseline fails ≥60%. Shows a skill *can* help, not how often one applies.
@@ -110,7 +224,24 @@ On **3 necessity-screened tasks** (each run 3×), where a baseline agent reliabl
 
 ### 🔬 What we're proudest of
 
-SkillLoop **caught its own false positives five times** during development — impossible task checkers, a hallucinating agent model, a GIL-masked concurrency test, rate-limit errors miscounted as failures, and a wrong-interpreter checker. Each would have manufactured a fake result. All documented in [`CALIBRATION.md`](CALIBRATION.md), including the experiments that *failed*. The rigor is the point.
+SkillLoop **caught its own false positives eight times** during development — impossible task checkers, a hallucinating agent model, a GIL-masked concurrency test, rate-limit errors miscounted as failures, a wrong-interpreter checker, a text encoding that silently destroyed five of six learned skills, and a verification loop that fed itself and demoted every skill that had just passed. The last two each produced a clean, plausible result *against* the project's own central claim. Each would have manufactured a fake result. All documented in [`CALIBRATION.md`](CALIBRATION.md), including the experiments that *failed*. The rigor is the point.
+
+### 🎯 Retrieval: does the lesson come back when it matters?
+
+Deterministic, no API key, reproducible with `python qa/run_r1.py` and `python qa/run_r2.py`.
+
+| Probe class | n | before | now |
+|---|---|---|---|
+| **R1** A. direct phrasing | 14 | 13 | **14** |
+| **R1** B. paraphrase, no shared words | 14 | 7 | 7 |
+| **R1** C. sibling skills | 14 | 14 | 14 |
+| **R1** D. lexical traps (must abstain) | 14 | 8 | **14** |
+| **R1** E. unrelated (must abstain) | 14 | 14 | 14 |
+| **R2** Q. real tasks phrased as questions | 14 | 2 | **14** |
+| **R2** S. raw error output, mid-task | 14 | 12 | **14** |
+| **R2** T. knowledge / creation traps (must abstain) | 14 | 8 | **14** |
+
+Stable from 0 to 2,000 distractor skills. Caveats: **R2 was written before the changes, but by the author of the fixes and against the same library**; treat it as a stress test, not independent confirmation. One R2 trap ("how does pip resolve…") was fixed after it was seen. **R1-B is unsolved lexically**: those probes share no words with their skill, which only embeddings can match. The embedding path now accepts strong matches without word overlap (`SKILLLOOP_EMBED_STRONG`, default 0.62); that is unit-tested but **not yet measured with a real embedding model**. `tests/test_purpose.py` runs the whole loop (fail, learn, rephrase, error mid-task, re-run, promote) against a simulated agent.
 
 ## Use it with any agent
 
@@ -142,6 +273,9 @@ Fills the **procedural-memory** gap most agent-memory tools leave open (they do 
 
 - [`CALIBRATION.md`](CALIBRATION.md) — every experiment, including the failures and the self-caught bugs *(the evidence page)*
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — Docker, config, health, backup, security posture
+- [`qa/conv_eval/PROTOCOL.md`](qa/conv_eval/PROTOCOL.md) — the conventions eval, pre-registered before any model ran
+- [`qa/conv_eval/RESULTS.md`](qa/conv_eval/RESULTS.md) — its results, including where SkillLoop loses
+- `python qa/reproduce.py` — verify every offline claim in this README in one command
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute, and the honesty ground rules
 
 ## License

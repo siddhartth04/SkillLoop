@@ -40,17 +40,27 @@ failing = Trace(
 def main():
     home = tempfile.mkdtemp(prefix="skillloop-demo-")
     if FAKE:
-        from tests.test_loop import fake_handler
+        # The offline model gives canned answers about pip installs, so the offline demo uses a pip failure:
+        # the story it tells (fail -> learn -> recalled next time) has to be true for the answers it gets.
+        from tests.test_loop import fake_handler, failing_trace
         LLM._fake_handler = staticmethod(fake_handler)
         loop = SkillLoop(home=home, llm=LLM(provider="fake"))
+        trace = failing_trace()
+        next_task = "how do I get the requests package working, the import keeps failing"
+        unrelated_task = "generate the monthly usage export"
+        mid_task_error = "Traceback (most recent call last):\n  File \"export.py\", line 1\nModuleNotFoundError: No module named 'requests'"
     else:
         loop = SkillLoop(home=home)
+        trace = failing
+        next_task = "how do I point nginx at the new upstream port and reload it"
+        unrelated_task = "roll out the new API release"
+        mid_task_error = "Job for nginx.service failed. See 'systemctl status nginx.service'"
 
     print("== 1. recall before learning ==")
-    print(loop.recall("update nginx config and reload") or "  (nothing known)")
+    print([h["name"] for h in loop.recall(next_task)] or "  (nothing known)")
 
-    print("\n== 2. submit the failing trace ==")
-    print(loop.learn(failing))
+    print("\n== 2. the agent fails; submit the trace ==")
+    print(loop.learn(trace))
 
     print("\n== 3. process: reflect -> synthesize -> judge gate ==")
     for r in loop.process():
@@ -62,15 +72,32 @@ def main():
         print("  " + (loop.store.skills_dir / s.name / "SKILL.md").read_text().replace("\n", "\n  ")
               if s.status in ("active", "candidate") else "  (quarantined; see quarantine/)")
 
-    print("\n== 5. recall for the next similar task ==")
-    for h in loop.recall("edit nginx conf and reload the service"):
+    print(f"\n== 5. next time, phrased differently: {next_task!r} ==")
+    hits = [h for h in loop.recall(next_task) if h["name"] != "_principles"]
+    for h in hits:
         print(f"  -> {h['name']} ({h['status']})")
+    if not hits:
+        print("  (nothing recalled)")
 
-    pend = loop.pending_evals()
-    if pend:
-        print(f"\n== 6. host-run eval queued: {pend[0]['id']} ==")
-        print("  assertions:", *pend[0]["assertions"], sep="\n   - ")
-        print("  (Run that task in your agent with the skill, then learn(trace, eval_id=...) to promote it to active.)")
+    print(f"\n== 6. a task that gives no hint ({unrelated_task!r}) hits the error mid-task ==")
+    with loop.session(unrelated_task, auto_learn=False) as s:
+        s.tool("bash", {"cmd": "run"}, error=mid_task_error)
+        hint = s.hints()
+        for h in hint:
+            print(f"  -> error-time recall: {h['name']} ({h['status']}) is handed to the agent before its next step")
+        if not hint:
+            print("  (nothing recalled)")
+
+    print("\n== 7. verification re-run, automated ==")
+    def runner(task, skill_md):
+        # your agent goes here: run `task` with `skill_md` in its prompt, judge the outcome with a real check
+        s = loop.session(task, auto_learn=False)
+        s.tool("bash", {"cmd": "follow the skill"}, result="ok")
+        return s.verified_by(0)
+    for r in loop.run_pending_evals(runner):
+        print(f"  eval {r['eval_id']} for {r['skill']}: {r['outcome']}")
+    for s in loop.store.all_skills():
+        print(f"  {s.name} is now [{s.status}]")
     print(f"\nlibrary home: {home}")
 
 
